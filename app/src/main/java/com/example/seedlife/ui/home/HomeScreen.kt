@@ -4,6 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.ui.auth.AuthViewModel
 
@@ -25,39 +29,30 @@ fun HomeScreen(
     onSignOut: () -> Unit = {},
     authViewModel: AuthViewModel? = null,
     onSeedClick: (String) -> Unit = {},
+    onEditSeed: (String) -> Unit = {},
     uid: String = "guest"
 ) {
-    // Para modo invitado: seeds de ejemplo en memoria
-    val guestSeeds = remember {
-        if (isGuest) {
-            listOf(
-                Seed(id = "seed1", title = "Semilla de Ejemplo 1", description = "Una semilla de ejemplo", level = 1),
-                Seed(id = "seed2", title = "Semilla de Ejemplo 2", description = "Otra semilla de ejemplo", level = 2)
-            )
-        } else {
-            emptyList<Seed>()
-        }
-    }
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(uid, isGuest)
+    )
+    val seeds by homeViewModel.seeds.collectAsState()
+    val isLoading by homeViewModel.isLoading.collectAsState()
 
-    // TODO: En el futuro, aquí se observarán las seeds desde Firestore
-    // Por ahora, usamos seeds de ejemplo para invitados
-    val seeds = if (isGuest) guestSeeds else emptyList<Seed>()
+    var showDeleteDialog by remember { mutableStateOf<String?>(null) }
+    var expandedSeedId by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mi Jardín") },
-                actions = {
-                    if (authViewModel != null && !isGuest) {
-                        TextButton(onClick = {
-                            authViewModel.signOut()
-                            onSignOut()
-                        }) {
-                            Text("Cerrar Sesión")
-                        }
-                    }
-                }
+                title = { Text("Mi Jardín") }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onEditSeed("") } // seedId vacío = crear nueva
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Nueva Semilla")
+            }
         }
     ) { paddingValues ->
         Column(
@@ -112,7 +107,11 @@ fun HomeScreen(
                     items(seeds) { seed ->
                         SeedItem(
                             seed = seed,
-                            onClick = { onSeedClick(seed.id) }
+                            onClick = { onSeedClick(seed.id) },
+                            onEdit = { onEditSeed(seed.id) },
+                            onDelete = { showDeleteDialog = seed.id },
+                            isExpanded = expandedSeedId == seed.id,
+                            onExpandChange = { expandedSeedId = if (expandedSeedId == seed.id) null else seed.id }
                         )
                     }
                 }

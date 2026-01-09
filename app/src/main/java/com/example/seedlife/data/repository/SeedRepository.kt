@@ -137,4 +137,153 @@ class SeedRepository {
             Result.failure(e)
         }
     }
+
+    /**
+     * Observa todas las seeds de un usuario en tiempo real
+     * @param uid ID del usuario
+     * @return Flow con la lista de seeds
+     */
+    fun observeSeeds(uid: String): Flow<List<Seed>> = callbackFlow {
+        val seedsCollection = firestore
+            .collection("users")
+            .document(uid)
+            .collection("seeds")
+
+        val listenerRegistration: ListenerRegistration = seedsCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(emptyList())
+                return@addSnapshotListener
+            }
+
+            val seeds = snapshot?.documents?.mapNotNull { doc ->
+                val seed = doc.toObject(Seed::class.java)
+                seed?.id = doc.id
+                seed
+            } ?: emptyList()
+
+            trySend(seeds)
+        }
+
+        awaitClose { listenerRegistration.remove() }
+    }
+
+    /**
+     * Crea una nueva seed
+     * @param uid ID del usuario
+     * @param title Título de la seed
+     * @param description Descripción de la seed
+     * @return Result con el ID de la seed creada o error
+     */
+    suspend fun createSeed(
+        uid: String,
+        title: String,
+        description: String
+    ): Result<String> {
+        return try {
+            val seed = Seed(
+                title = title.trim(),
+                description = description.trim(),
+                level = 1,
+                createdAt = Date()
+            )
+
+            val seedRef = firestore
+                .collection("users")
+                .document(uid)
+                .collection("seeds")
+                .document()
+
+            seedRef.set(seed).await()
+            Result.success(seedRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Actualiza una seed existente
+     * @param uid ID del usuario
+     * @param seedId ID de la seed
+     * @param title Nuevo título
+     * @param description Nueva descripción
+     * @return Result con éxito o error
+     */
+    suspend fun updateSeed(
+        uid: String,
+        seedId: String,
+        title: String,
+        description: String
+    ): Result<Unit> {
+        return try {
+            val seedRef = firestore
+                .collection("users")
+                .document(uid)
+                .collection("seeds")
+                .document(seedId)
+
+            seedRef.update(
+                mapOf(
+                    "title" to title.trim(),
+                    "description" to description.trim()
+                )
+            ).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Elimina una seed y todos sus waterings (borrado en cascada)
+     * @param uid ID del usuario
+     * @param seedId ID de la seed
+     * @return Result con éxito o error
+     */
+    suspend fun deleteSeed(uid: String, seedId: String): Result<Unit> {
+        return try {
+            val batch = firestore.batch()
+            val wateringsCollection = firestore
+                .collection("users")
+                .document(uid)
+                .collection("seeds")
+                .document(seedId)
+                .collection("waterings")
+
+            // Leer todos los waterings en lotes
+            var hasMore = true
+            while (hasMore) {
+                val wateringsSnapshot = wateringsCollection.limit(500).get().await()
+                
+                if (wateringsSnapshot.isEmpty) {
+                    hasMore = false
+                } else {
+                    wateringsSnapshot.documents.forEach { doc ->
+                        batch.delete(doc.reference)
+                    }
+                    
+                    // Si hay menos de 500, ya terminamos
+                    if (wateringsSnapshot.size() < 500) {
+                        hasMore = false
+                    }
+                }
+            }
+
+            // Borrar la seed
+            val seedRef = firestore
+                .collection("users")
+                .document(uid)
+                .collection("seeds")
+                .document(seedId)
+            
+            batch.delete(seedRef)
+
+            // Ejecutar el batch
+            batch.commit().await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
