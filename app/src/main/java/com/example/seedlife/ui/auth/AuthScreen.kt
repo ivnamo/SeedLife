@@ -1,10 +1,12 @@
 package com.example.seedlife.ui.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,9 +33,10 @@ fun AuthScreen(
         }
     }
 
-    // Mostrar error si existe
-    val errorMessage = when (authState) {
-        is AuthState.Error -> authState.message
+    // Mostrar error si existe (usando variable local para smart cast)
+    val currentState = authState
+    val errorMessage = when (currentState) {
+        is AuthState.Error -> currentState.message
         else -> null
     }
 
@@ -75,7 +78,11 @@ fun AuthScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            enabled = authState !is AuthState.Loading
+            enabled = authState !is AuthState.Loading,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email
+            )
         )
 
         OutlinedTextField(
@@ -100,11 +107,16 @@ fun AuthScreen(
         Button(
             onClick = {
                 viewModel.clearError()
+                // Limpiar espacios en blanco de los campos
+                val trimmedEmail = email.trim()
+                val trimmedPassword = password.trim()
+                val trimmedName = name.trim()
+                
                 if (isLoginMode) {
-                    viewModel.login(email, password)
+                    viewModel.login(trimmedEmail, trimmedPassword)
                 } else {
-                    if (name.isNotBlank()) {
-                        viewModel.register(email, password, name)
+                    if (trimmedName.isNotBlank()) {
+                        viewModel.register(trimmedEmail, trimmedPassword, trimmedName)
                     }
                 }
             },
@@ -136,7 +148,7 @@ fun AuthScreen(
             )
         }
 
-        Divider(modifier = Modifier.padding(vertical = 16.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
         OutlinedButton(
             onClick = {

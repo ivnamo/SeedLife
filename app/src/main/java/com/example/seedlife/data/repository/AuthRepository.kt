@@ -19,11 +19,17 @@ class AuthRepository {
      */
     suspend fun register(email: String, password: String, name: String): Result<String> {
         return try {
-            val result = auth.createUserWithEmailAndPassword(email, password).await()
+            // Validar que el email no esté vacío después de trim
+            val trimmedEmail = email.trim()
+            if (trimmedEmail.isEmpty()) {
+                return Result.failure(Exception("El email no puede estar vacío"))
+            }
+            
+            val result = auth.createUserWithEmailAndPassword(trimmedEmail, password).await()
             val uid = result.user?.uid ?: return Result.failure(Exception("No se pudo obtener el UID del usuario"))
             
             // Crear documento del usuario en Firestore
-            val user = User(name = name, email = email)
+            val user = User(name = name.trim(), email = trimmedEmail)
             usersCollection.document(uid).set(user).await()
             
             Result.success(uid)
@@ -38,7 +44,13 @@ class AuthRepository {
      */
     suspend fun login(email: String, password: String): Result<String> {
         return try {
-            val result = auth.signInWithEmailAndPassword(email, password).await()
+            // Validar que el email no esté vacío después de trim
+            val trimmedEmail = email.trim()
+            if (trimmedEmail.isEmpty()) {
+                return Result.failure(Exception("El email no puede estar vacío"))
+            }
+            
+            val result = auth.signInWithEmailAndPassword(trimmedEmail, password).await()
             val uid = result.user?.uid ?: return Result.failure(Exception("No se pudo obtener el UID del usuario"))
             Result.success(uid)
         } catch (e: Exception) {

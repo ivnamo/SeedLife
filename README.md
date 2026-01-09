@@ -24,7 +24,7 @@
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/TU_USUARIO/SeedLife.git
+   git clone [url-del-repositorio]
    cd SeedLife
    ```
 

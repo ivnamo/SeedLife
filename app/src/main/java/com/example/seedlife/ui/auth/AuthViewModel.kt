@@ -55,16 +55,17 @@ class AuthViewModel(
     fun register(email: String, password: String, name: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            when (val result = authRepository.register(email, password, name)) {
-                is Result.Success -> {
-                    loadUserData(result.getOrNull() ?: return@launch)
-                }
-                is Result.Failure -> {
+            val result = authRepository.register(email, password, name)
+            result.fold(
+                onSuccess = { uid ->
+                    loadUserData(uid)
+                },
+                onFailure = { exception ->
                     _authState.value = AuthState.Error(
-                        result.exceptionOrNull()?.message ?: "Error desconocido al registrar"
+                        exception.message ?: "Error desconocido al registrar"
                     )
                 }
-            }
+            )
         }
     }
 
@@ -74,16 +75,17 @@ class AuthViewModel(
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            when (val result = authRepository.login(email, password)) {
-                is Result.Success -> {
-                    loadUserData(result.getOrNull() ?: return@launch)
-                }
-                is Result.Failure -> {
+            val result = authRepository.login(email, password)
+            result.fold(
+                onSuccess = { uid ->
+                    loadUserData(uid)
+                },
+                onFailure = { exception ->
                     _authState.value = AuthState.Error(
-                        result.exceptionOrNull()?.message ?: "Error desconocido al iniciar sesión"
+                        exception.message ?: "Error desconocido al iniciar sesión"
                     )
                 }
-            }
+            )
         }
     }
 
@@ -103,22 +105,22 @@ class AuthViewModel(
      */
     private fun loadUserData(uid: String) {
         viewModelScope.launch {
-            when (val result = authRepository.getUserData(uid)) {
-                is Result.Success -> {
-                    val user = result.getOrNull()
+            val result = authRepository.getUserData(uid)
+            result.fold(
+                onSuccess = { user ->
                     _userData.value = user
                     _authState.value = AuthState.Success(
                         userId = uid,
                         user = user,
                         isGuest = false
                     )
-                }
-                is Result.Failure -> {
+                },
+                onFailure = { exception ->
                     _authState.value = AuthState.Error(
-                        result.exceptionOrNull()?.message ?: "Error al cargar datos del usuario"
+                        exception.message ?: "Error al cargar datos del usuario"
                     )
                 }
-            }
+            )
         }
     }
 
