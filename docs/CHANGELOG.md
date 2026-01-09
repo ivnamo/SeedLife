@@ -8,9 +8,53 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Cambios Planificados
-- Navegación entre pantallas con Compose Navigation
 - Inyección de dependencias (Hilt/Koin)
-- Mejoras en manejo de errores
+- Integración de Room para cache offline
+- Mejoras en manejo de errores global
+- Creación y edición de seeds desde la app
+- Estadísticas y gráficos de riegos
+- Búsqueda y filtrado de seeds
+
+---
+
+## [1.2.0] - 2025-01-09
+
+### Agregado
+- **Navegación completa** con Jetpack Navigation Compose 2.8.4
+- `NavGraph.kt` con sistema de navegación centralizado
+- Sealed class `Screen` para rutas type-safe
+- Pantalla de detalle de seed (`SeedDetailScreen`)
+- `SeedDetailViewModel` para gestión de estado del detalle
+- `SeedRepository` para operaciones CRUD de seeds y waterings
+- Modelo de datos `Seed` con campos: title, description, level, lastWateredAt, createdAt
+- Modelo de datos `Watering` con estados de ánimo (GOOD, OK, BAD)
+- Enum `WateringMood` para estados de riego
+- Sistema de niveles automático (1-5) basado en cantidad de riegos
+- Observación en tiempo real de seeds y waterings desde Firestore
+- Funcionalidad de añadir riegos con mood y notas opcionales
+- `ValidationUtils` para validación de email, contraseña y nombres
+- Soporte completo para modo invitado en todas las pantallas
+- `SeedDetailViewModelFactory` para crear ViewModel con parámetros
+- Navegación con argumentos entre Home y SeedDetail
+- Estructura de Firestore: `/users/{uid}/seeds/{seedId}/waterings/{wateringId}`
+- Dependencias de testing avanzadas: MockK, Turbine, Coroutines Test
+
+### Cambios
+- Actualización de `HomeScreen` para mostrar lista de seeds con navegación
+- Mejora de `AuthViewModel` con validación usando `ValidationUtils`
+- Refactorización de flujos de datos para usar observación en tiempo real
+- Actualización de `MainActivity` para usar `SeedLifeNavGraph`
+
+### Dependencias Añadidas
+- `androidx.navigation:navigation-compose:2.8.4`
+- `io.mockk:mockk:1.13.8`
+- `app.cash.turbine:turbine:1.0.0`
+- `org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3`
+
+### Estructura de Datos
+- Collections de Firestore: `/users/{uid}/seeds` y `/users/{uid}/seeds/{seedId}/waterings`
+- Sistema de cálculo de nivel: `level = minOf(5, 1 + (totalWaterings / 3))`
+- Timestamps automáticos con `@ServerTimestamp` en Firestore
 
 ---
 

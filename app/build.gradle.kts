@@ -58,6 +58,9 @@ dependencies {
     // ViewModel para Compose
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
+    // Navigation Compose
+    implementation(libs.androidx.navigation.compose)
+    
     // Firebase BOM (Bill of Materials) - gestiona todas las versiones de Firebase
     implementation(platform(libs.firebase.bom))
     // Firebase Authentication
@@ -67,10 +70,15 @@ dependencies {
     
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+    
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

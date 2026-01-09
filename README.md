@@ -7,11 +7,17 @@
 - Interfaz moderna con Jetpack Compose
 - Material Design 3 con soporte para tema dinámico
 - Modo oscuro/claro automático
-- Arquitectura MVVM implementada
+- Arquitectura MVVM implementada completamente
+- Navegación con Jetpack Navigation Compose
 - Autenticación con Firebase Authentication
 - Base de datos en la nube con Cloud Firestore
-- Gestión de estado con ViewModel y StateFlow
+- Gestión de estado reactivo con ViewModel y StateFlow
 - Repository Pattern para acceso a datos
+- Sistema de gestión de Seeds (semillas) con niveles
+- Sistema de riegos (Waterings) con estados de ánimo
+- Modo invitado para uso sin autenticación
+- Validación de formularios con utilidades integradas
+- Observación en tiempo real de datos desde Firestore
 
 ## 📋 Requisitos Previos
 
@@ -42,7 +48,7 @@
 
 ## 📱 Especificaciones
 
-- **Versión actual**: 1.0
+- **Versión actual**: 1.2.0 (ver [CHANGELOG.md](docs/CHANGELOG.md) para historial completo)
 - **Version Code**: 1
 - **Min SDK**: 24 (Android 7.0 Nougat)
 - **Target SDK**: 36
@@ -66,11 +72,14 @@ Para más detalles sobre la arquitectura, consulta [docs/ARCHITECTURE.md](docs/A
 
 - **Lenguaje**: Kotlin 2.0.21
 - **UI**: Jetpack Compose (BOM 2024.09.00) + Material Design 3
+- **Navegación**: Jetpack Navigation Compose 2.8.4
 - **Arquitectura**: MVVM con ViewModel y StateFlow
 - **Backend**: Firebase (Authentication + Cloud Firestore)
+- **Reactive Streams**: Kotlin Coroutines y Flow para operaciones asíncronas
 - **Build**: Android Gradle Plugin 8.13.2, Gradle con Version Catalog
 - **AndroidX**: Core KTX, Lifecycle Runtime KTX, Lifecycle ViewModel Compose
 - **Google Services**: Google Services Plugin 4.4.2
+- **Testing**: JUnit, MockK, Turbine, Coroutines Test
 
 ## 🔄 Historial de Cambios
 
@@ -91,6 +100,15 @@ Las contribuciones son bienvenidas. Por favor:
 
 [Añadir información de contacto si es necesario]
 
+## 🎮 Funcionalidades Principales
+
+- **Autenticación**: Registro, login, logout y modo invitado
+- **Gestión de Seeds**: Visualización y detalle de semillas con sistema de niveles (1-5)
+- **Sistema de Riegos**: Registro de riegos con estados de ánimo (GOOD, OK, BAD) y notas
+- **Navegación**: Flujo completo entre Auth → Home → Seed Detail
+- **Tiempo Real**: Actualización automática de datos desde Firestore
+- **Validación**: Validación de email, contraseña y nombres en formularios
+
 ---
 
-**Nota**: Este proyecto está en fase inicial de desarrollo. Las funcionalidades principales se implementarán progresivamente.
+**Nota**: El proyecto está en desarrollo activo. Consulta [CHANGELOG.md](docs/CHANGELOG.md) para ver las últimas actualizaciones.
