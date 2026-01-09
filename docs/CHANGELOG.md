@@ -8,12 +8,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Cambios Planificados
-- Inyección de dependencias (Hilt/Koin)
-- Integración de Room para cache offline
-- Mejoras en manejo de errores global
-- Creación y edición de seeds desde la app
-- Estadísticas y gráficos de riegos
-- Búsqueda y filtrado de seeds
+- Inyección de dependencias (Hilt/Koin) para mejor gestión de dependencias
+- Integración de Room para cache offline y funcionamiento sin conexión
+- Mejoras en manejo de errores global con UI de errores consistente
+- Creación y edición de seeds desde la app (actualmente solo visualización)
+- Estadísticas y gráficos de riegos para visualización de progreso
+- Búsqueda y filtrado de seeds en HomeScreen
+- Notificaciones push para recordatorios de riego
+- Exportación de datos (CSV/JSON) para respaldo
+- Mejoras en UI/UX: animaciones, transiciones suaves
+- Sistema de logros/badges basado en niveles de seeds
 
 ---
 
@@ -21,23 +25,25 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Agregado
 - **Navegación completa** con Jetpack Navigation Compose 2.8.4
-- `NavGraph.kt` con sistema de navegación centralizado
-- Sealed class `Screen` para rutas type-safe
-- Pantalla de detalle de seed (`SeedDetailScreen`)
-- `SeedDetailViewModel` para gestión de estado del detalle
+- `NavGraph.kt` con sistema de navegación centralizado y type-safe
+- Sealed class `Screen` para definición de rutas con argumentos tipados
+- Pantalla de detalle de seed (`SeedDetailScreen`) con información completa
+- `SeedDetailViewModel` para gestión de estado del detalle con observación reactiva
 - `SeedRepository` para operaciones CRUD de seeds y waterings
-- Modelo de datos `Seed` con campos: title, description, level, lastWateredAt, createdAt
-- Modelo de datos `Watering` con estados de ánimo (GOOD, OK, BAD)
-- Enum `WateringMood` para estados de riego
-- Sistema de niveles automático (1-5) basado en cantidad de riegos
-- Observación en tiempo real de seeds y waterings desde Firestore
-- Funcionalidad de añadir riegos con mood y notas opcionales
-- `ValidationUtils` para validación de email, contraseña y nombres
-- Soporte completo para modo invitado en todas las pantallas
-- `SeedDetailViewModelFactory` para crear ViewModel con parámetros
-- Navegación con argumentos entre Home y SeedDetail
-- Estructura de Firestore: `/users/{uid}/seeds/{seedId}/waterings/{wateringId}`
-- Dependencias de testing avanzadas: MockK, Turbine, Coroutines Test
+- Modelo de datos `Seed` con campos: title, description, level (1-5), lastWateredAt, createdAt
+- Modelo de datos `Watering` con estados de ánimo (GOOD, OK, BAD) y notas opcionales
+- Enum `WateringMood` para tipado seguro de estados de riego
+- Sistema de niveles automático (1-5) basado en cantidad de riegos: `level = minOf(5, 1 + (totalWaterings / 3))`
+- Observación en tiempo real de seeds y waterings desde Firestore usando `addSnapshotListener`
+- Funcionalidad de añadir riegos con mood, notas opcionales y actualización automática de nivel
+- `ValidationUtils` para validación de email, contraseña y nombres con funciones reutilizables
+- Soporte completo para modo invitado en todas las pantallas (Auth, Home, SeedDetail)
+- `SeedDetailViewModelFactory` para crear ViewModel con parámetros (seedId)
+- Navegación con argumentos entre Home y SeedDetail usando NavBackStackEntry
+- Estructura jerárquica de Firestore: `/users/{uid}/seeds/{seedId}/waterings/{wateringId}`
+- Dependencias de testing avanzadas: MockK (mocking), Turbine (Flow testing), Coroutines Test
+- Gestión de ciclo de vida de coroutines con ViewModelScope
+- Manejo de resultados con `Result<T>` en repositorios para control de errores
 
 ### Cambios
 - Actualización de `HomeScreen` para mostrar lista de seeds con navegación

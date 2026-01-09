@@ -2,6 +2,7 @@ package com.example.seedlife.ui.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 /**
  * Pantalla de autenticación con Login, Registro y modo Invitado
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
     onAuthSuccess: () -> Unit,
@@ -62,7 +64,7 @@ fun AuthScreen(
         if (!isLoginMode) {
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = { newName -> name = newName },
                 label = { Text("Nombre") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -73,7 +75,7 @@ fun AuthScreen(
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { newEmail -> email = newEmail },
             label = { Text("Email") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -87,7 +89,7 @@ fun AuthScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { newPassword -> password = newPassword },
             label = { Text("Contraseña") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier
