@@ -2,9 +2,11 @@ package com.example.seedlife.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.seedlife.ui.auth.AuthScreen
 import com.example.seedlife.ui.auth.AuthViewModel
 import com.example.seedlife.ui.home.HomeScreen
@@ -68,8 +70,8 @@ fun SeedLifeNavGraph(
         composable(
             route = "seed_detail/{seedId}",
             arguments = listOf(
-                androidx.navigation.NavArgument("seedId") {
-                    type = androidx.navigation.NavType.StringType
+                navArgument("seedId") {
+                    type = NavType.StringType
                 }
             )
         ) { backStackEntry ->

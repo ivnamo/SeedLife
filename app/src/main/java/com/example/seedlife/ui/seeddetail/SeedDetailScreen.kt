@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,16 +23,17 @@ import java.util.*
 /**
  * Pantalla de detalle de una seed con lista de riegos
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeedDetailScreen(
     seedId: String,
     uid: String,
     isGuest: Boolean = false,
-    onNavigateBack: () -> Unit = {},
-    viewModel: SeedDetailViewModel = viewModel(
+    onNavigateBack: () -> Unit = {}
+) {
+    val viewModel: SeedDetailViewModel = viewModel(
         factory = SeedDetailViewModelFactory(uid, seedId, isGuest)
     )
-) {
     val seed by viewModel.seed.collectAsState()
     val waterings by viewModel.waterings.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
