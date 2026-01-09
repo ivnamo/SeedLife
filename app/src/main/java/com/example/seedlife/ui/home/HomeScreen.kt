@@ -18,6 +18,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.ui.auth.AuthViewModel
 import com.example.seedlife.ui.common.UiState
+import java.io.File
+import org.json.JSONObject
 
 /**
  * Pantalla principal con lista de seeds
@@ -90,6 +92,21 @@ fun HomeScreen(
 
             when (val state = uiState) {
                 is UiState.Loading -> {
+                    // #region agent log
+                    try {
+                        val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                        val logEntry = JSONObject().apply {
+                            put("sessionId", "debug-session")
+                            put("runId", "run1")
+                            put("hypothesisId", "D")
+                            put("location", "HomeScreen:uiState")
+                            put("message", "UI state is Loading")
+                            put("data", JSONObject())
+                            put("timestamp", System.currentTimeMillis())
+                        }
+                        logFile.appendText(logEntry.toString() + "\n")
+                    } catch (e: Exception) {}
+                    // #endregion
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -100,6 +117,24 @@ fun HomeScreen(
                     }
                 }
                 is UiState.Success -> {
+                    // #region agent log
+                    try {
+                        val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                        val logEntry = JSONObject().apply {
+                            put("sessionId", "debug-session")
+                            put("runId", "run1")
+                            put("hypothesisId", "D")
+                            put("location", "HomeScreen:uiState")
+                            put("message", "UI state is Success")
+                            put("data", JSONObject().apply {
+                                put("seedsCount", state.data.size)
+                                put("seedIds", state.data.map { it.id })
+                            })
+                            put("timestamp", System.currentTimeMillis())
+                        }
+                        logFile.appendText(logEntry.toString() + "\n")
+                    } catch (e: Exception) {}
+                    // #endregion
                     if (state.data.isEmpty()) {
                         Box(
                             modifier = Modifier

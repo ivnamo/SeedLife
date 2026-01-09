@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.Date
+import java.io.File
+import org.json.JSONObject
 
 /**
  * Repositorio que maneja las operaciones de Seeds y Waterings en Firestore
@@ -150,6 +152,24 @@ class SeedRepository {
      * @return Flow con la lista de seeds
      */
     fun observeSeeds(uid: String): Flow<List<Seed>> = callbackFlow {
+        // #region agent log
+        try {
+            val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+            val logEntry = JSONObject().apply {
+                put("sessionId", "debug-session")
+                put("runId", "run1")
+                put("hypothesisId", "A")
+                put("location", "SeedRepository.observeSeeds:152")
+                put("message", "observeSeeds called")
+                put("data", JSONObject().apply {
+                    put("uid", uid)
+                    put("path", "users/$uid/seeds")
+                })
+                put("timestamp", System.currentTimeMillis())
+            }
+            logFile.appendText(logEntry.toString() + "\n")
+        } catch (e: Exception) {}
+        // #endregion
         val seedsCollection = firestore
             .collection("users")
             .document(uid)
@@ -158,6 +178,26 @@ class SeedRepository {
         val listenerRegistration: ListenerRegistration = seedsCollection.addSnapshotListener(
             MetadataChanges.INCLUDE
         ) { snapshot, error ->
+            // #region agent log
+            try {
+                val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                val logEntry = JSONObject().apply {
+                    put("sessionId", "debug-session")
+                    put("runId", "run1")
+                    put("hypothesisId", "A")
+                    put("location", "SeedRepository.observeSeeds:snapshot")
+                    put("message", "snapshot received")
+                    put("data", JSONObject().apply {
+                        put("hasError", error != null)
+                        put("error", error?.message ?: "null")
+                        put("docCount", snapshot?.documents?.size ?: 0)
+                        put("hasMetadata", snapshot?.metadata?.hasPendingWrites ?: false)
+                    })
+                    put("timestamp", System.currentTimeMillis())
+                }
+                logFile.appendText(logEntry.toString() + "\n")
+            } catch (e: Exception) {}
+            // #endregion
             if (error != null) {
                 close(Exception(FirebaseErrorMapper.mapException(error)))
                 return@addSnapshotListener
@@ -165,10 +205,47 @@ class SeedRepository {
 
             val seeds = snapshot?.documents?.mapNotNull { doc ->
                 val seed = doc.toObject(Seed::class.java)
+                // #region agent log
+                try {
+                    val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                    val logEntry = JSONObject().apply {
+                        put("sessionId", "debug-session")
+                        put("runId", "run1")
+                        put("hypothesisId", "B")
+                        put("location", "SeedRepository.observeSeeds:map")
+                        put("message", "mapping document")
+                        put("data", JSONObject().apply {
+                            put("docId", doc.id)
+                            put("seedNotNull", seed != null)
+                            put("seedTitle", seed?.title ?: "null")
+                        })
+                        put("timestamp", System.currentTimeMillis())
+                    }
+                    logFile.appendText(logEntry.toString() + "\n")
+                } catch (e: Exception) {}
+                // #endregion
                 seed?.id = doc.id
                 seed
             } ?: emptyList()
 
+            // #region agent log
+            try {
+                val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                val logEntry = JSONObject().apply {
+                    put("sessionId", "debug-session")
+                    put("runId", "run1")
+                    put("hypothesisId", "E")
+                    put("location", "SeedRepository.observeSeeds:trySend")
+                    put("message", "sending seeds to flow")
+                    put("data", JSONObject().apply {
+                        put("seedsCount", seeds.size)
+                        put("seedIds", seeds.map { it.id })
+                    })
+                    put("timestamp", System.currentTimeMillis())
+                }
+                logFile.appendText(logEntry.toString() + "\n")
+            } catch (e: Exception) {}
+            // #endregion
             trySend(seeds)
         }
 
@@ -187,6 +264,25 @@ class SeedRepository {
         title: String,
         description: String
     ): Result<String> {
+        // #region agent log
+        try {
+            val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+            val logEntry = JSONObject().apply {
+                put("sessionId", "debug-session")
+                put("runId", "run1")
+                put("hypothesisId", "C")
+                put("location", "SeedRepository.createSeed:185")
+                put("message", "createSeed called")
+                put("data", JSONObject().apply {
+                    put("uid", uid)
+                    put("title", title)
+                    put("path", "users/$uid/seeds")
+                })
+                put("timestamp", System.currentTimeMillis())
+            }
+            logFile.appendText(logEntry.toString() + "\n")
+        } catch (e: Exception) {}
+        // #endregion
         return try {
             val seed = Seed(
                 title = title.trim(),
@@ -202,8 +298,44 @@ class SeedRepository {
                 .document()
 
             seedRef.set(seed).await()
+            // #region agent log
+            try {
+                val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                val logEntry = JSONObject().apply {
+                    put("sessionId", "debug-session")
+                    put("runId", "run1")
+                    put("hypothesisId", "C")
+                    put("location", "SeedRepository.createSeed:afterSet")
+                    put("message", "seed created in firestore")
+                    put("data", JSONObject().apply {
+                        put("seedId", seedRef.id)
+                        put("uid", uid)
+                        put("fullPath", "users/$uid/seeds/${seedRef.id}")
+                    })
+                    put("timestamp", System.currentTimeMillis())
+                }
+                logFile.appendText(logEntry.toString() + "\n")
+            } catch (e: Exception) {}
+            // #endregion
             Result.success(seedRef.id)
         } catch (e: Exception) {
+            // #region agent log
+            try {
+                val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                val logEntry = JSONObject().apply {
+                    put("sessionId", "debug-session")
+                    put("runId", "run1")
+                    put("hypothesisId", "C")
+                    put("location", "SeedRepository.createSeed:error")
+                    put("message", "createSeed failed")
+                    put("data", JSONObject().apply {
+                        put("error", e.message ?: "unknown")
+                    })
+                    put("timestamp", System.currentTimeMillis())
+                }
+                logFile.appendText(logEntry.toString() + "\n")
+            } catch (ex: Exception) {}
+            // #endregion
             Result.failure(e)
         }
     }

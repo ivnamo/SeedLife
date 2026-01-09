@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
+import org.json.JSONObject
 
 /**
  * ViewModel para HomeScreen
@@ -30,6 +32,24 @@ class HomeViewModel(
     private val guestSeeds = mutableListOf<Seed>()
 
     init {
+        // #region agent log
+        try {
+            val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+            val logEntry = JSONObject().apply {
+                put("sessionId", "debug-session")
+                put("runId", "run1")
+                put("hypothesisId", "D")
+                put("location", "HomeViewModel.init:32")
+                put("message", "ViewModel init")
+                put("data", JSONObject().apply {
+                    put("uid", uid)
+                    put("isGuest", isGuest)
+                })
+                put("timestamp", System.currentTimeMillis())
+            }
+            logFile.appendText(logEntry.toString() + "\n")
+        } catch (e: Exception) {}
+        // #endregion
         if (isGuest) {
             // Inicializar con seeds de ejemplo para invitado
             guestSeeds.addAll(
@@ -43,10 +63,62 @@ class HomeViewModel(
             // Observar seeds desde Firestore
             viewModelScope.launch {
                 try {
+                    // #region agent log
+                    try {
+                        val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                        val logEntry = JSONObject().apply {
+                            put("sessionId", "debug-session")
+                            put("runId", "run1")
+                            put("hypothesisId", "D")
+                            put("location", "HomeViewModel.init:collectStart")
+                            put("message", "starting collect on observeSeeds")
+                            put("data", JSONObject().apply {
+                                put("uid", uid)
+                            })
+                            put("timestamp", System.currentTimeMillis())
+                        }
+                        logFile.appendText(logEntry.toString() + "\n")
+                    } catch (e: Exception) {}
+                    // #endregion
                     seedRepository.observeSeeds(uid).collect { seeds ->
+                        // #region agent log
+                        try {
+                            val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                            val logEntry = JSONObject().apply {
+                                put("sessionId", "debug-session")
+                                put("runId", "run1")
+                                put("hypothesisId", "D")
+                                put("location", "HomeViewModel.init:collect")
+                                put("message", "received seeds in ViewModel")
+                                put("data", JSONObject().apply {
+                                    put("seedsCount", seeds.size)
+                                    put("seedIds", seeds.map { it.id })
+                                })
+                                put("timestamp", System.currentTimeMillis())
+                            }
+                            logFile.appendText(logEntry.toString() + "\n")
+                        } catch (e: Exception) {}
+                        // #endregion
                         _uiState.value = UiState.Success(seeds)
                     }
                 } catch (e: Exception) {
+                    // #region agent log
+                    try {
+                        val logFile = File("c:\\Users\\34692\\Desktop\\repos\\SeedLife\\.cursor\\debug.log")
+                        val logEntry = JSONObject().apply {
+                            put("sessionId", "debug-session")
+                            put("runId", "run1")
+                            put("hypothesisId", "D")
+                            put("location", "HomeViewModel.init:error")
+                            put("message", "collect error")
+                            put("data", JSONObject().apply {
+                                put("error", e.message ?: "unknown")
+                            })
+                            put("timestamp", System.currentTimeMillis())
+                        }
+                        logFile.appendText(logEntry.toString() + "\n")
+                    } catch (ex: Exception) {}
+                    // #endregion
                     _uiState.value = UiState.Error(
                         message = FirebaseErrorMapper.mapException(e),
                         retry = { retry() }
