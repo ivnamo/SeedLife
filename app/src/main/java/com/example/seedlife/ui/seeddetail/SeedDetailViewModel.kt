@@ -115,4 +115,29 @@ class SeedDetailViewModel(
     fun clearError() {
         _errorMessage.value = null
     }
+
+    /**
+     * Elimina la seed actual
+     */
+    fun deleteSeed(onSuccess: () -> Unit) {
+        if (isGuest) {
+            // Para invitado, se maneja desde fuera
+            onSuccess()
+        } else {
+            viewModelScope.launch {
+                _isLoading.value = true
+                val result = seedRepository.deleteSeed(uid, seedId)
+                result.fold(
+                    onSuccess = {
+                        _isLoading.value = false
+                        onSuccess()
+                    },
+                    onFailure = { exception ->
+                        _isLoading.value = false
+                        _errorMessage.value = exception.message ?: "Error al eliminar semilla"
+                    }
+                )
+            }
+        }
+    }
 }

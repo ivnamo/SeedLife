@@ -61,10 +61,10 @@ fun SeedDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEditSeed(seedId) }) {
+                    TextButton(onClick = { onEditSeed(seedId) }) {
                         Text("Editar")
                     }
-                    IconButton(
+                    TextButton(
                         onClick = { showDeleteDialog = true }
                     ) {
                         Text("Eliminar", color = MaterialTheme.colorScheme.error)
@@ -183,7 +183,9 @@ fun SeedDetailScreen(
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                        onDeleteSeed(seedId)
+                        viewModel.deleteSeed {
+                            onDeleteSeed(seedId)
+                        }
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
