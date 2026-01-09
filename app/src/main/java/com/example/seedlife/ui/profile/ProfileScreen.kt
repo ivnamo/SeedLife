@@ -2,8 +2,7 @@ package com.example.seedlife.ui.profile
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Brightness4
-import androidx.compose.material.icons.filled.Brightness7
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -127,7 +126,7 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = if (isDarkMode) Icons.Default.Brightness4 else Icons.Default.Brightness7,
+                        imageVector = Icons.Default.Settings,
                         contentDescription = null,
                         modifier = Modifier.padding(end = 16.dp)
                     )
