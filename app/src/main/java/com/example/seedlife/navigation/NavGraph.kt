@@ -2,9 +2,9 @@ package com.example.seedlife.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -41,7 +41,7 @@ sealed class AuthScreen(val route: String) {
  */
 sealed class AppScreen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Garden : AppScreen("app/garden", "Jardín", Icons.Default.Home)
-    object Stats : AppScreen("app/stats", "Estadísticas", Icons.Default.Assessment)
+    object Stats : AppScreen("app/stats", "Estadísticas", Icons.Default.ShowChart)
     object Profile : AppScreen("app/profile", "Perfil", Icons.Default.Person)
     
     data class SeedDetail(val seedId: String = "{seedId}") : AppScreen("app/seed_detail/{seedId}", "Detalle", Icons.Default.Home) {
