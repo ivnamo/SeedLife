@@ -6,6 +6,8 @@ import com.example.seedlife.data.model.Seed
 import com.example.seedlife.data.model.Watering
 import com.example.seedlife.data.model.WateringMood
 import com.example.seedlife.data.repository.SeedRepository
+import com.example.seedlife.ui.common.UiState
+import com.example.seedlife.util.FirebaseErrorMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,17 +23,17 @@ class SeedDetailViewModel(
     private val isGuest: Boolean = false
 ) : ViewModel() {
 
-    private val _seed = MutableStateFlow<Seed?>(null)
-    val seed: StateFlow<Seed?> = _seed.asStateFlow()
+    private val _seed = MutableStateFlow<UiState<Seed?>>(UiState.Loading)
+    val seed: StateFlow<UiState<Seed?>> = _seed.asStateFlow()
 
-    private val _waterings = MutableStateFlow<List<Watering>>(emptyList())
-    val waterings: StateFlow<List<Watering>> = _waterings.asStateFlow()
+    private val _waterings = MutableStateFlow<UiState<List<Watering>>>(UiState.Loading)
+    val waterings: StateFlow<UiState<List<Watering>>> = _waterings.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
 
     // Para modo invitado: datos en memoria
     private var guestSeed: Seed? = null
@@ -46,19 +48,76 @@ class SeedDetailViewModel(
                 description = "Esta es una semilla de ejemplo en modo invitado",
                 level = 1
             )
-            _seed.value = guestSeed
+            _seed.value = UiState.Success(guestSeed)
+            _waterings.value = UiState.Success(emptyList())
         } else {
             // Observar seed en tiempo real desde Firestore
             viewModelScope.launch {
-                seedRepository.observeSeed(uid, seedId).collect { seed ->
-                    _seed.value = seed
+                try {
+                    seedRepository.observeSeed(uid, seedId).collect { seed ->
+                        _seed.value = UiState.Success(seed)
+                    }
+                } catch (e: Exception) {
+                    _seed.value = UiState.Error(
+                        message = FirebaseErrorMapper.mapException(e),
+                        retry = { retrySeed() }
+                    )
                 }
             }
 
             // Observar waterings en tiempo real desde Firestore
             viewModelScope.launch {
-                seedRepository.observeWaterings(uid, seedId).collect { waterings ->
-                    _waterings.value = waterings
+                try {
+                    seedRepository.observeWaterings(uid, seedId).collect { waterings ->
+                        _waterings.value = UiState.Success(waterings)
+                    }
+                } catch (e: Exception) {
+                    _waterings.value = UiState.Error(
+                        message = FirebaseErrorMapper.mapException(e),
+                        retry = { retryWaterings() }
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Reintenta cargar la seed
+     */
+    fun retrySeed() {
+        if (!isGuest) {
+            _seed.value = UiState.Loading
+            viewModelScope.launch {
+                try {
+                    seedRepository.observeSeed(uid, seedId).collect { seed ->
+                        _seed.value = UiState.Success(seed)
+                    }
+                } catch (e: Exception) {
+                    _seed.value = UiState.Error(
+                        message = FirebaseErrorMapper.mapException(e),
+                        retry = { retrySeed() }
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Reintenta cargar los waterings
+     */
+    fun retryWaterings() {
+        if (!isGuest) {
+            _waterings.value = UiState.Loading
+            viewModelScope.launch {
+                try {
+                    seedRepository.observeWaterings(uid, seedId).collect { waterings ->
+                        _waterings.value = UiState.Success(waterings)
+                    }
+                } catch (e: Exception) {
+                    _waterings.value = UiState.Error(
+                        message = FirebaseErrorMapper.mapException(e),
+                        retry = { retryWaterings() }
+                    )
                 }
             }
         }
@@ -92,28 +151,21 @@ class SeedDetailViewModel(
             // Modo normal: añadir a Firestore
             viewModelScope.launch {
                 _isLoading.value = true
-                _errorMessage.value = null
 
                 val result = seedRepository.addWatering(uid, seedId, mood, note)
                 result.fold(
                     onSuccess = {
                         _isLoading.value = false
+                        _snackbarMessage.value = "Riego guardado"
                         // El level se actualizará automáticamente por observeSeed
                     },
                     onFailure = { exception ->
                         _isLoading.value = false
-                        _errorMessage.value = exception.message ?: "Error al añadir riego"
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
                     }
                 )
             }
         }
-    }
-
-    /**
-     * Limpia el mensaje de error
-     */
-    fun clearError() {
-        _errorMessage.value = null
     }
 
     /**
@@ -130,14 +182,22 @@ class SeedDetailViewModel(
                 result.fold(
                     onSuccess = {
                         _isLoading.value = false
+                        _snackbarMessage.value = "Semilla eliminada"
                         onSuccess()
                     },
                     onFailure = { exception ->
                         _isLoading.value = false
-                        _errorMessage.value = exception.message ?: "Error al eliminar semilla"
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
                     }
                 )
             }
         }
+    }
+
+    /**
+     * Limpia el mensaje del snackbar
+     */
+    fun clearSnackbarMessage() {
+        _snackbarMessage.value = null
     }
 }

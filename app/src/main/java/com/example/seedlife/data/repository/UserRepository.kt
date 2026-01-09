@@ -1,8 +1,10 @@
 package com.example.seedlife.data.repository
 
 import com.example.seedlife.data.model.UserProfile
+import com.example.seedlife.util.FirebaseErrorMapper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -25,9 +27,11 @@ class UserRepository {
             .collection("users")
             .document(uid)
 
-        val listenerRegistration: ListenerRegistration = userDoc.addSnapshotListener { snapshot, error ->
+        val listenerRegistration: ListenerRegistration = userDoc.addSnapshotListener(
+            MetadataChanges.INCLUDE
+        ) { snapshot, error ->
             if (error != null) {
-                trySend(null)
+                close(Exception(FirebaseErrorMapper.mapException(error)))
                 return@addSnapshotListener
             }
 

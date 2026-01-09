@@ -1,6 +1,8 @@
 package com.example.seedlife.data.repository
 
+import com.example.seedlife.util.FirebaseErrorMapper
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -33,9 +35,11 @@ class StatsRepository {
             .collection("stats")
             .document("summary")
 
-        val listenerRegistration: ListenerRegistration = statsDoc.addSnapshotListener { snapshot, error ->
+        val listenerRegistration: ListenerRegistration = statsDoc.addSnapshotListener(
+            MetadataChanges.INCLUDE
+        ) { snapshot, error ->
             if (error != null) {
-                trySend(UserStats())
+                close(Exception(FirebaseErrorMapper.mapException(error)))
                 return@addSnapshotListener
             }
 
@@ -70,6 +74,7 @@ class StatsRepository {
             ).await()
         } catch (e: Exception) {
             // Error al actualizar stats, se puede ignorar o loguear
+            // El error ya está mapeado si se propaga
         }
     }
 

@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.seedlife.util.ValidationUtils
 
 /**
  * Pantalla para crear o editar una seed
@@ -31,12 +32,41 @@ fun SeedEditorScreen(
     val description by viewModel.description.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
 
-    var showError by remember { mutableStateOf(false) }
+    var titleError by remember { mutableStateOf<String?>(null) }
+    var descriptionError by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
+    // Validar título en tiempo real
+    LaunchedEffect(title) {
+        if (title.isNotBlank()) {
+            val validation = ValidationUtils.validateSeedTitle(title)
+            titleError = validation.errorMessage
+        } else {
+            titleError = null
+        }
+    }
+
+    // Validar descripción en tiempo real
+    LaunchedEffect(description) {
+        val validation = ValidationUtils.validateSeedDescription(description)
+        descriptionError = validation.errorMessage
+    }
+
+    // Mostrar snackbar cuando hay mensaje
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearSnackbarMessage()
+        }
+    }
+
+    // Mostrar error si existe
     LaunchedEffect(errorMessage) {
-        if (errorMessage != null) {
-            showError = true
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
         }
     }
 
@@ -50,7 +80,8 @@ fun SeedEditorScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -61,32 +92,71 @@ fun SeedEditorScreen(
         ) {
             OutlinedTextField(
                 value = title,
-                onValueChange = { viewModel.updateTitle(it) },
+                onValueChange = { 
+                    viewModel.updateTitle(it)
+                    titleError = null // Limpiar error al escribir
+                },
                 label = { Text("Título") },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
-                singleLine = true
+                singleLine = true,
+                isError = titleError != null,
+                supportingText = titleError?.let { { Text(it) } }
             )
 
-            OutlinedTextField(
-                value = description,
-                onValueChange = { viewModel.updateDescription(it) },
-                label = { Text("Descripción") },
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                enabled = !isLoading,
-                maxLines = 10
-            )
+                    .weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { 
+                        viewModel.updateDescription(it)
+                        descriptionError = null // Limpiar error al escribir
+                    },
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                    maxLines = 10,
+                    isError = descriptionError != null,
+                    supportingText = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            if (descriptionError != null) {
+                                Text(descriptionError!!, color = MaterialTheme.colorScheme.error)
+                            } else {
+                                Spacer(modifier = Modifier.width(0.dp))
+                            }
+                            Text(
+                                text = "${description.length}/200",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                )
+            }
 
             Button(
                 onClick = {
-                    viewModel.save {
-                        onNavigateBack()
+                    // Validar antes de guardar
+                    val titleValidation = ValidationUtils.validateSeedTitle(title)
+                    val descValidation = ValidationUtils.validateSeedDescription(description)
+                    
+                    if (titleValidation.isValid && descValidation.isValid) {
+                        viewModel.save {
+                            onNavigateBack()
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading && title.isNotBlank()
+                enabled = !isLoading && 
+                         title.isNotBlank() && 
+                         titleError == null && 
+                         descriptionError == null
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -100,25 +170,6 @@ fun SeedEditorScreen(
         }
     }
 
-    // Mostrar error si existe
-    if (showError && errorMessage != null) {
-        AlertDialog(
-            onDismissRequest = {
-                showError = false
-                viewModel.clearError()
-            },
-            title = { Text("Error") },
-            text = { Text(errorMessage!!) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showError = false
-                    viewModel.clearError()
-                }) {
-                    Text("OK")
-                }
-            }
-        )
-    }
 }
 
 /**
@@ -142,6 +193,9 @@ class SeedEditorViewModel(
 
     private val _errorMessage = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val errorMessage: kotlinx.coroutines.flow.StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _snackbarMessage = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    val snackbarMessage: kotlinx.coroutines.flow.StateFlow<String?> = _snackbarMessage.asStateFlow()
 
     init {
         // Si estamos editando, cargar los datos de la seed
@@ -194,6 +248,7 @@ class SeedEditorViewModel(
             result.fold(
                 onSuccess = {
                     _isLoading.value = false
+                    _snackbarMessage.value = if (seedId == null) "Semilla creada" else "Semilla actualizada"
                     onSuccess()
                 },
                 onFailure = { exception ->
@@ -206,6 +261,10 @@ class SeedEditorViewModel(
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun clearSnackbarMessage() {
+        _snackbarMessage.value = null
     }
 }
 

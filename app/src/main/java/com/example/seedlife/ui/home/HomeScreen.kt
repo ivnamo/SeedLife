@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.ui.auth.AuthViewModel
+import com.example.seedlife.ui.common.UiState
 
 /**
  * Pantalla principal con lista de seeds
@@ -35,11 +36,20 @@ fun HomeScreen(
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(uid, isGuest)
     )
-    val seeds by homeViewModel.seeds.collectAsState()
-    val isLoading by homeViewModel.isLoading.collectAsState()
+    val uiState by homeViewModel.uiState.collectAsState()
+    val snackbarMessage by homeViewModel.snackbarMessage.collectAsState()
 
     var showDeleteDialog by remember { mutableStateOf<String?>(null) }
     var expandedSeedId by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Mostrar snackbar cuando hay mensaje
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            homeViewModel.clearSnackbarMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -53,7 +63,8 @@ fun HomeScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Nueva Semilla")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -77,42 +88,80 @@ fun HomeScreen(
                 }
             }
 
-            if (seeds.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No hay semillas",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "En el futuro podrás crear semillas aquí",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+            when (val state = uiState) {
+                is UiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(seeds) { seed ->
-                        SeedItem(
-                            seed = seed,
-                            onClick = { onSeedClick(seed.id) },
-                            onEdit = { onEditSeed(seed.id) },
-                            onDelete = { showDeleteDialog = seed.id },
-                            isExpanded = expandedSeedId == seed.id,
-                            onExpandChange = { expandedSeedId = if (expandedSeedId == seed.id) null else seed.id }
-                        )
+                is UiState.Success -> {
+                    if (state.data.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "No hay semillas",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Toca el botón + para crear tu primera semilla",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(state.data) { seed ->
+                                SeedItem(
+                                    seed = seed,
+                                    onClick = { onSeedClick(seed.id) },
+                                    onEdit = { onEditSeed(seed.id) },
+                                    onDelete = { showDeleteDialog = seed.id },
+                                    isExpanded = expandedSeedId == seed.id,
+                                    onExpandChange = { expandedSeedId = if (expandedSeedId == seed.id) null else seed.id }
+                                )
+                            }
+                        }
+                    }
+                }
+                is UiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = state.message,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Button(
+                                onClick = { state.retry?.invoke() }
+                            ) {
+                                Text("Reintentar")
+                            }
+                        }
                     }
                 }
             }
@@ -121,6 +170,10 @@ fun HomeScreen(
 
     // Diálogo de confirmación para eliminar
     showDeleteDialog?.let { seedId ->
+        val seeds = when (val state = uiState) {
+            is UiState.Success -> state.data
+            else -> emptyList()
+        }
         val seed = seeds.find { it.id == seedId }
         DeleteSeedDialog(
             seedTitle = seed?.title ?: "esta semilla",

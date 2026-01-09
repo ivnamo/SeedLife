@@ -1,6 +1,7 @@
 package com.example.seedlife.data.repository
 
 import com.example.seedlife.data.model.User
+import com.example.seedlife.util.FirebaseErrorMapper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -34,7 +35,7 @@ class AuthRepository {
             
             Result.success(uid)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
         }
     }
 
@@ -54,7 +55,7 @@ class AuthRepository {
             val uid = result.user?.uid ?: return Result.failure(Exception("No se pudo obtener el UID del usuario"))
             Result.success(uid)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
         }
     }
 

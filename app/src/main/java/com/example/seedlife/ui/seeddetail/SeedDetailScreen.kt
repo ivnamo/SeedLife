@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.seedlife.data.model.Watering
 import com.example.seedlife.data.model.WateringMood
+import com.example.seedlife.ui.common.UiState
+import com.example.seedlife.util.ValidationUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,18 +38,20 @@ fun SeedDetailScreen(
     val viewModel: SeedDetailViewModel = viewModel(
         factory = SeedDetailViewModelFactory(uid, seedId, isGuest)
     )
-    val seed by viewModel.seed.collectAsState()
-    val waterings by viewModel.waterings.collectAsState()
+    val seedState by viewModel.seed.collectAsState()
+    val wateringsState by viewModel.waterings.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
 
     var showWateringDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Mostrar error si existe
-    errorMessage?.let { message ->
-        LaunchedEffect(message) {
-            // El error se mostrará en el diálogo o en un snackbar
+    // Mostrar snackbar cuando hay mensaje
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearSnackbarMessage()
         }
     }
 
@@ -78,7 +82,8 @@ fun SeedDetailScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Regar")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -87,40 +92,75 @@ fun SeedDetailScreen(
                 .padding(16.dp)
         ) {
             // Información de la seed
-            seed?.let { currentSeed ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+            when (val state = seedState) {
+                is UiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = currentSeed.title,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Text(
-                            text = currentSeed.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        CircularProgressIndicator()
+                    }
+                }
+                is UiState.Success -> {
+                    state.data?.let { currentSeed ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(
+                                    text = currentSeed.title,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                Text(
+                                    text = currentSeed.description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Nivel: ${currentSeed.level}",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    currentSeed.lastWateredAt?.let { date ->
+                                        Text(
+                                            text = "Último riego: ${formatDate(date)}",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                is UiState.Error -> {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "Nivel: ${currentSeed.level}",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold
+                                text = state.message,
+                                color = MaterialTheme.colorScheme.error
                             )
-                            currentSeed.lastWateredAt?.let { date ->
-                                Text(
-                                    text = "Último riego: ${formatDate(date)}",
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                            Button(onClick = { state.retry?.invoke() }) {
+                                Text("Reintentar")
                             }
                         }
                     }
@@ -134,25 +174,60 @@ fun SeedDetailScreen(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            if (waterings.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No hay riegos registrados",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            when (val state = wateringsState) {
+                is UiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(waterings) { watering ->
-                        WateringItem(watering = watering)
+                is UiState.Success -> {
+                    if (state.data.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No hay riegos registrados aún.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(state.data) { watering ->
+                                WateringItem(watering = watering)
+                            }
+                        }
+                    }
+                }
+                is UiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = state.message,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Button(onClick = { state.retry?.invoke() }) {
+                                Text("Reintentar")
+                            }
+                        }
                     }
                 }
             }
@@ -173,32 +248,19 @@ fun SeedDetailScreen(
 
     // Diálogo de confirmación para eliminar
     if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar Semilla") },
-            text = { 
-                Text("¿Estás seguro de que quieres eliminar \"${seed?.title ?: "esta semilla"}\"? Esta acción eliminará también todos sus riegos y no se puede deshacer.") 
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        viewModel.deleteSeed {
-                            onDeleteSeed(seedId)
-                        }
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Eliminar")
+        val seedTitle = when (val state = seedState) {
+            is UiState.Success -> state.data?.title ?: "esta semilla"
+            else -> "esta semilla"
+        }
+        DeleteSeedDialog(
+            seedTitle = seedTitle,
+            onConfirm = {
+                viewModel.deleteSeed {
+                    onDeleteSeed(seedId) // Notify parent to navigate back
                 }
+                showDeleteDialog = false
             },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar")
-                }
-            }
+            onDismiss = { showDeleteDialog = false }
         )
     }
 }
@@ -257,6 +319,13 @@ fun AddWateringDialog(
 ) {
     var selectedMood by remember { mutableStateOf<WateringMood?>(null) }
     var note by remember { mutableStateOf("") }
+    var noteError by remember { mutableStateOf<String?>(null) }
+
+    // Validar note en tiempo real
+    LaunchedEffect(note) {
+        val validation = ValidationUtils.validateWateringNote(note)
+        noteError = validation.errorMessage
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -280,10 +349,31 @@ fun AddWateringDialog(
                 }
                 OutlinedTextField(
                     value = note,
-                    onValueChange = { note = it },
+                    onValueChange = { 
+                        note = it
+                        noteError = null // Limpiar error al escribir
+                    },
                     label = { Text("Nota (opcional)") },
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3
+                    maxLines = 3,
+                    isError = noteError != null,
+                    supportingText = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            if (noteError != null) {
+                                Text(noteError!!, color = MaterialTheme.colorScheme.error)
+                            } else {
+                                Spacer(modifier = Modifier.width(0.dp))
+                            }
+                            Text(
+                                text = "${note.length}/250",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
                 )
             }
         },
@@ -291,10 +381,13 @@ fun AddWateringDialog(
             Button(
                 onClick = {
                     selectedMood?.let { mood ->
-                        onConfirm(mood, note.takeIf { it.isNotBlank() })
+                        val validation = ValidationUtils.validateWateringNote(note)
+                        if (validation.isValid) {
+                            onConfirm(mood, note.takeIf { it.isNotBlank() })
+                        }
                     }
                 },
-                enabled = selectedMood != null && !isLoading
+                enabled = selectedMood != null && !isLoading && noteError == null
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -347,6 +440,34 @@ private fun getMoodColor(mood: WateringMood): Color {
         WateringMood.OK -> Color(0xFFFF9800)
         WateringMood.BAD -> Color(0xFFF44336)
     }
+}
+
+@Composable
+fun DeleteSeedDialog(
+    seedTitle: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Eliminar Semilla") },
+        text = { Text("¿Estás seguro de que quieres eliminar \"$seedTitle\"? Esta acción no se puede deshacer.") },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Eliminar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 private fun formatDate(date: Date): String {

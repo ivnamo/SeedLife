@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.seedlife.data.FirestoreConfig
 import com.example.seedlife.navigation.AppNavGraph
 import com.example.seedlife.navigation.AuthNavGraph
 import com.example.seedlife.ui.auth.AuthState
@@ -21,6 +22,8 @@ import com.example.seedlife.ui.theme.SeedLifeTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Habilitar persistencia offline de Firestore ANTES de cualquier uso
+        FirestoreConfig.enablePersistence(this)
         enableEdgeToEdge()
         setContent {
             SeedLifeTheme {
@@ -72,7 +75,9 @@ fun SeedLifeApp() {
             isGuest = sessionState.isGuest,
             onSignOut = {
                 sessionViewModel.signOut()
-                // El estado se actualizará y mostrará Auth automáticamente
+                authNavController.navigate(com.example.seedlife.navigation.AuthScreen.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
             }
         )
     } else {

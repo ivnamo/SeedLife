@@ -3,7 +3,9 @@ package com.example.seedlife.data.repository
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.data.model.Watering
 import com.example.seedlife.data.model.WateringMood
+import com.example.seedlife.util.FirebaseErrorMapper
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.channels.awaitClose
@@ -33,9 +35,11 @@ class SeedRepository {
             .collection("waterings")
             .orderBy("date", Query.Direction.DESCENDING)
 
-        val listenerRegistration: ListenerRegistration = wateringsCollection.addSnapshotListener { snapshot, error ->
+        val listenerRegistration: ListenerRegistration = wateringsCollection.addSnapshotListener(
+            MetadataChanges.INCLUDE
+        ) { snapshot, error ->
             if (error != null) {
-                trySend(emptyList())
+                close(Exception(FirebaseErrorMapper.mapException(error)))
                 return@addSnapshotListener
             }
 
@@ -64,9 +68,11 @@ class SeedRepository {
             .collection("seeds")
             .document(seedId)
 
-        val listenerRegistration: ListenerRegistration = seedDoc.addSnapshotListener { snapshot, error ->
+        val listenerRegistration: ListenerRegistration = seedDoc.addSnapshotListener(
+            MetadataChanges.INCLUDE
+        ) { snapshot, error ->
             if (error != null) {
-                trySend(null)
+                close(Exception(FirebaseErrorMapper.mapException(error)))
                 return@addSnapshotListener
             }
 
@@ -134,7 +140,7 @@ class SeedRepository {
 
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
         }
     }
 
@@ -149,9 +155,11 @@ class SeedRepository {
             .document(uid)
             .collection("seeds")
 
-        val listenerRegistration: ListenerRegistration = seedsCollection.addSnapshotListener { snapshot, error ->
+        val listenerRegistration: ListenerRegistration = seedsCollection.addSnapshotListener(
+            MetadataChanges.INCLUDE
+        ) { snapshot, error ->
             if (error != null) {
-                trySend(emptyList())
+                close(Exception(FirebaseErrorMapper.mapException(error)))
                 return@addSnapshotListener
             }
 
@@ -230,7 +238,7 @@ class SeedRepository {
 
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
         }
     }
 
@@ -283,7 +291,7 @@ class SeedRepository {
 
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
         }
     }
 }

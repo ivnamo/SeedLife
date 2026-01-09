@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.data.repository.SeedRepository
+import com.example.seedlife.ui.common.UiState
+import com.example.seedlife.util.FirebaseErrorMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,11 +20,11 @@ class HomeViewModel(
     private val seedRepository: SeedRepository = SeedRepository()
 ) : ViewModel() {
 
-    private val _seeds = MutableStateFlow<List<Seed>>(emptyList())
-    val seeds: StateFlow<List<Seed>> = _seeds.asStateFlow()
+    private val _uiState = MutableStateFlow<UiState<List<Seed>>>(UiState.Loading)
+    val uiState: StateFlow<UiState<List<Seed>>> = _uiState.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
 
     // Para modo invitado: seeds en memoria
     private val guestSeeds = mutableListOf<Seed>()
@@ -36,12 +38,40 @@ class HomeViewModel(
                     Seed(id = "seed2", title = "Semilla de Ejemplo 2", description = "Otra semilla de ejemplo", level = 2)
                 )
             )
-            _seeds.value = guestSeeds.toList()
+            _uiState.value = UiState.Success(guestSeeds.toList())
         } else {
             // Observar seeds desde Firestore
             viewModelScope.launch {
-                seedRepository.observeSeeds(uid).collect { seeds ->
-                    _seeds.value = seeds
+                try {
+                    seedRepository.observeSeeds(uid).collect { seeds ->
+                        _uiState.value = UiState.Success(seeds)
+                    }
+                } catch (e: Exception) {
+                    _uiState.value = UiState.Error(
+                        message = FirebaseErrorMapper.mapException(e),
+                        retry = { retry() }
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Reintenta cargar las seeds
+     */
+    fun retry() {
+        if (!isGuest) {
+            _uiState.value = UiState.Loading
+            viewModelScope.launch {
+                try {
+                    seedRepository.observeSeeds(uid).collect { seeds ->
+                        _uiState.value = UiState.Success(seeds)
+                    }
+                } catch (e: Exception) {
+                    _uiState.value = UiState.Error(
+                        message = FirebaseErrorMapper.mapException(e),
+                        retry = { retry() }
+                    )
                 }
             }
         }
@@ -52,23 +82,21 @@ class HomeViewModel(
      */
     fun deleteSeed(seedId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            _isLoading.value = true
             if (isGuest) {
                 // Eliminar de memoria
                 guestSeeds.removeAll { it.id == seedId }
-                _seeds.value = guestSeeds.toList()
-                _isLoading.value = false
+                _uiState.value = UiState.Success(guestSeeds.toList())
+                _snackbarMessage.value = "Semilla eliminada"
                 onSuccess()
             } else {
                 val result = seedRepository.deleteSeed(uid, seedId)
                 result.fold(
                     onSuccess = {
-                        _isLoading.value = false
+                        _snackbarMessage.value = "Semilla eliminada"
                         onSuccess()
                     },
-                    onFailure = {
-                        _isLoading.value = false
-                        // Error se maneja desde fuera
+                    onFailure = { exception ->
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
                     }
                 )
             }
@@ -80,7 +108,6 @@ class HomeViewModel(
      */
     fun createSeed(title: String, description: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch {
-            _isLoading.value = true
             if (isGuest) {
                 val newSeed = Seed(
                     id = "guest_seed_${System.currentTimeMillis()}",
@@ -89,19 +116,18 @@ class HomeViewModel(
                     level = 1
                 )
                 guestSeeds.add(newSeed)
-                _seeds.value = guestSeeds.toList()
-                _isLoading.value = false
+                _uiState.value = UiState.Success(guestSeeds.toList())
+                _snackbarMessage.value = "Semilla creada"
                 onSuccess(newSeed.id)
             } else {
                 val result = seedRepository.createSeed(uid, title, description)
                 result.fold(
                     onSuccess = { seedId ->
-                        _isLoading.value = false
+                        _snackbarMessage.value = "Semilla creada"
                         onSuccess(seedId)
                     },
-                    onFailure = {
-                        _isLoading.value = false
-                        // Error se maneja desde fuera
+                    onFailure = { exception ->
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
                     }
                 )
             }
@@ -113,7 +139,6 @@ class HomeViewModel(
      */
     fun updateSeed(seedId: String, title: String, description: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            _isLoading.value = true
             if (isGuest) {
                 val index = guestSeeds.indexOfFirst { it.id == seedId }
                 if (index >= 0) {
@@ -121,24 +146,30 @@ class HomeViewModel(
                         title = title,
                         description = description
                     )
-                    _seeds.value = guestSeeds.toList()
+                    _uiState.value = UiState.Success(guestSeeds.toList())
                 }
-                _isLoading.value = false
+                _snackbarMessage.value = "Semilla actualizada"
                 onSuccess()
             } else {
                 val result = seedRepository.updateSeed(uid, seedId, title, description)
                 result.fold(
                     onSuccess = {
-                        _isLoading.value = false
+                        _snackbarMessage.value = "Semilla actualizada"
                         onSuccess()
                     },
-                    onFailure = {
-                        _isLoading.value = false
-                        // Error se maneja desde fuera
+                    onFailure = { exception ->
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
                     }
                 )
             }
         }
+    }
+
+    /**
+     * Limpia el mensaje del snackbar
+     */
+    fun clearSnackbarMessage() {
+        _snackbarMessage.value = null
     }
 }
 
