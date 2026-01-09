@@ -41,7 +41,7 @@ sealed class AuthScreen(val route: String) {
  */
 sealed class AppScreen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Garden : AppScreen("app/garden", "Jardín", Icons.Default.Home)
-    object Stats : AppScreen("app/stats", "Estadísticas", Icons.Default.ShowChart)
+    object Stats : AppScreen("app/stats", "Estadísticas", Icons.Default.bar_chart_4_bars)
     object Profile : AppScreen("app/profile", "Perfil", Icons.Default.Person)
     
     data class SeedDetail(val seedId: String = "{seedId}") : AppScreen("app/seed_detail/{seedId}", "Detalle", Icons.Default.Home) {
