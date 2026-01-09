@@ -203,20 +203,6 @@ fun SeedItem(
             }
         }
     }
-
-    // Diálogo de confirmación para eliminar
-    showDeleteDialog?.let { seedId ->
-        val seed = seeds.find { it.id == seedId }
-        DeleteSeedDialog(
-            seedTitle = seed?.title ?: "esta semilla",
-            onConfirm = {
-                homeViewModel.deleteSeed(seedId) {
-                    showDeleteDialog = null
-                }
-            },
-            onDismiss = { showDeleteDialog = null }
-        )
-    }
 }
 
 // Diálogo de confirmación para eliminar
