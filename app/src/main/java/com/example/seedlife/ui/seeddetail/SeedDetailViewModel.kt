@@ -137,7 +137,7 @@ class SeedDetailViewModel(
                 createdAt = java.util.Date()
             )
             guestWaterings.add(0, newWatering) // Añadir al inicio
-            _waterings.value = guestWaterings.toList()
+            _waterings.value = UiState.Success(guestWaterings.toList())
 
             // Actualizar level en memoria
             val totalWaterings = guestWaterings.size
@@ -146,7 +146,7 @@ class SeedDetailViewModel(
                 level = newLevel,
                 lastWateredAt = java.util.Date()
             )
-            _seed.value = guestSeed
+            _seed.value = UiState.Success(guestSeed)
         } else {
             // Modo normal: añadir a Firestore
             viewModelScope.launch {
