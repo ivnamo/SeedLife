@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "795193838714",
+    "project_id": "seedlife-3a4d8",
+    "storage_bucket": "seedlife-3a4d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:795193838714:android:f203e2239d10cb73453fc3",
+        "android_client_info": {
+          "package_name": "com.example.seedlife"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRaLmZLEQ0HO4k4kwEOQCJAY_o6vk9CoU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
