@@ -118,42 +118,132 @@ fun HomeScreen(
             }
         }
     }
+
+    // Diálogo de confirmación para eliminar
+    showDeleteDialog?.let { seedId ->
+        val seed = seeds.find { it.id == seedId }
+        DeleteSeedDialog(
+            seedTitle = seed?.title ?: "esta semilla",
+            onConfirm = {
+                homeViewModel.deleteSeed(seedId) {
+                    showDeleteDialog = null
+                }
+            },
+            onDismiss = { showDeleteDialog = null }
+        )
+    }
 }
 
 @Composable
 fun SeedItem(
     seed: Seed,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    isExpanded: Boolean,
+    onExpandChange: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = seed.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            Text(
-                text = seed.description,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Nivel: ${seed.level}",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = onClick)
+                ) {
+                    Text(
+                        text = seed.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = seed.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "Nivel: ${seed.level}",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                
+                IconButton(onClick = onExpandChange) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Opciones")
+                }
+            }
+
+            DropdownMenu(
+                expanded = isExpanded,
+                onDismissRequest = onExpandChange
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Editar") },
+                    onClick = {
+                        onExpandChange()
+                        onEdit()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
+                    onClick = {
+                        onExpandChange()
+                        onDelete()
+                    }
                 )
             }
         }
     }
+
+    // Diálogo de confirmación para eliminar
+    showDeleteDialog?.let { seedId ->
+        val seed = seeds.find { it.id == seedId }
+        DeleteSeedDialog(
+            seedTitle = seed?.title ?: "esta semilla",
+            onConfirm = {
+                homeViewModel.deleteSeed(seedId) {
+                    showDeleteDialog = null
+                }
+            },
+            onDismiss = { showDeleteDialog = null }
+        )
+    }
+}
+
+// Diálogo de confirmación para eliminar
+@Composable
+fun DeleteSeedDialog(
+    seedTitle: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Eliminar Semilla") },
+        text = { Text("¿Estás seguro de que quieres eliminar \"$seedTitle\"? Esta acción no se puede deshacer.") },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Eliminar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

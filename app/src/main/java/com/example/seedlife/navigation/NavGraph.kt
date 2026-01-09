@@ -47,6 +47,10 @@ sealed class AppScreen(val route: String, val title: String, val icon: androidx.
     data class SeedDetail(val seedId: String = "{seedId}") : AppScreen("app/seed_detail/{seedId}", "Detalle", Icons.Default.Home) {
         fun createRoute(seedId: String) = "app/seed_detail/$seedId"
     }
+    
+    data class SeedEditor(val seedId: String = "{seedId}") : AppScreen("app/seed_editor/{seedId}", "Editor", Icons.Default.Home) {
+        fun createRoute(seedId: String) = "app/seed_editor/$seedId"
+    }
 }
 
 /**
@@ -130,6 +134,9 @@ fun AppNavGraph(
                     onSeedClick = { seedId ->
                         navController.navigate(AppScreen.SeedDetail("").createRoute(seedId))
                     },
+                    onEditSeed = { seedId ->
+                        navController.navigate(AppScreen.SeedEditor("").createRoute(seedId))
+                    },
                     uid = uid ?: "guest"
                 )
             }
@@ -145,24 +152,50 @@ fun AppNavGraph(
                 )
             }
 
-            composable(
-                route = "app/seed_detail/{seedId}",
-                arguments = listOf(
-                    navArgument("seedId") {
-                        type = NavType.StringType
-                    }
-                )
-            ) { backStackEntry ->
-                val seedId = backStackEntry.arguments?.getString("seedId") ?: ""
-                SeedDetailScreen(
-                    seedId = seedId,
-                    uid = uid ?: "guest",
-                    isGuest = isGuest,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
+        composable(
+            route = "app/seed_detail/{seedId}",
+            arguments = listOf(
+                navArgument("seedId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val seedId = backStackEntry.arguments?.getString("seedId") ?: ""
+            SeedDetailScreen(
+                seedId = seedId,
+                uid = uid ?: "guest",
+                isGuest = isGuest,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onEditSeed = { editSeedId ->
+                    navController.navigate(AppScreen.SeedEditor("").createRoute(editSeedId))
+                },
+                onDeleteSeed = { deleteSeedId ->
+                    // Eliminar y volver a Home
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = "app/seed_editor/{seedId}",
+            arguments = listOf(
+                navArgument("seedId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val seedId = backStackEntry.arguments?.getString("seedId") ?: ""
+            com.example.seedlife.ui.seededitor.SeedEditorScreen(
+                seedId = if (seedId.isEmpty()) null else seedId,
+                uid = uid ?: "guest",
+                isGuest = isGuest,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
         }
     }
 }

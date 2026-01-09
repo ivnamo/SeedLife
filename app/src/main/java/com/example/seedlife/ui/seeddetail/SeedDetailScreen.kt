@@ -29,7 +29,9 @@ fun SeedDetailScreen(
     seedId: String,
     uid: String,
     isGuest: Boolean = false,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onEditSeed: (String) -> Unit = {},
+    onDeleteSeed: (String) -> Unit = {}
 ) {
     val viewModel: SeedDetailViewModel = viewModel(
         factory = SeedDetailViewModelFactory(uid, seedId, isGuest)
@@ -40,6 +42,7 @@ fun SeedDetailScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var showWateringDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     // Mostrar error si existe
     errorMessage?.let { message ->
@@ -55,6 +58,16 @@ fun SeedDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onEditSeed(seedId) }) {
+                        Text("Editar")
+                    }
+                    IconButton(
+                        onClick = { showDeleteDialog = true }
+                    ) {
+                        Text("Eliminar", color = MaterialTheme.colorScheme.error)
                     }
                 }
             )
@@ -155,6 +168,35 @@ fun SeedDetailScreen(
                 showWateringDialog = false
             },
             isLoading = isLoading
+        )
+    }
+
+    // Diálogo de confirmación para eliminar
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminar Semilla") },
+            text = { 
+                Text("¿Estás seguro de que quieres eliminar \"${seed?.title ?: "esta semilla"}\"? Esta acción eliminará también todos sus riegos y no se puede deshacer.") 
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteSeed(seedId)
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
         )
     }
 }
