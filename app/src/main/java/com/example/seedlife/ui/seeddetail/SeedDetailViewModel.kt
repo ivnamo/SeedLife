@@ -159,9 +159,11 @@ class SeedDetailViewModel(
                         _snackbarMessage.value = "Riego guardado"
                         // El level se actualizará automáticamente por observeSeed
                     },
-                    onFailure = { exception ->
+                    onFailure = { throwable ->
                         _isLoading.value = false
-                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(
+                            throwable as? Exception ?: Exception(throwable.message, throwable)
+                        )
                     }
                 )
             }
@@ -185,9 +187,11 @@ class SeedDetailViewModel(
                         _snackbarMessage.value = "Semilla eliminada"
                         onSuccess()
                     },
-                    onFailure = { exception ->
+                    onFailure = { throwable ->
                         _isLoading.value = false
-                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(
+                            throwable as? Exception ?: Exception(throwable.message, throwable)
+                        )
                     }
                 )
             }

@@ -95,8 +95,10 @@ class HomeViewModel(
                         _snackbarMessage.value = "Semilla eliminada"
                         onSuccess()
                     },
-                    onFailure = { exception ->
-                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
+                    onFailure = { throwable ->
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(
+                            throwable as? Exception ?: Exception(throwable.message, throwable)
+                        )
                     }
                 )
             }
@@ -126,8 +128,10 @@ class HomeViewModel(
                         _snackbarMessage.value = "Semilla creada"
                         onSuccess(seedId)
                     },
-                    onFailure = { exception ->
-                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
+                    onFailure = { throwable ->
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(
+                            throwable as? Exception ?: Exception(throwable.message, throwable)
+                        )
                     }
                 )
             }
@@ -157,8 +161,10 @@ class HomeViewModel(
                         _snackbarMessage.value = "Semilla actualizada"
                         onSuccess()
                     },
-                    onFailure = { exception ->
-                        _snackbarMessage.value = FirebaseErrorMapper.mapException(exception)
+                    onFailure = { throwable ->
+                        _snackbarMessage.value = FirebaseErrorMapper.mapException(
+                            throwable as? Exception ?: Exception(throwable.message, throwable)
+                        )
                     }
                 )
             }
