@@ -1,5 +1,6 @@
 package com.example.seedlife.ui.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,9 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.seedlife.R
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.ui.auth.AuthViewModel
 import com.example.seedlife.ui.common.UiState
@@ -107,17 +111,34 @@ fun HomeScreen(
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                // Imagen del jardín vacío
+                                Image(
+                                    painter = painterResource(id = R.drawable.empty_garden),
+                                    contentDescription = "Jardín vacío",
+                                    modifier = Modifier
+                                        .size(250.dp)
+                                        .padding(bottom = 24.dp)
+                                )
+                                
+                                // Texto centrado
                                 Text(
                                     text = "No hay semillas",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(bottom = 8.dp)
                                 )
                                 Text(
                                     text = "Toca el botón + para crear tu primera semilla",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 8.dp)
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
