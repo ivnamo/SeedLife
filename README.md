@@ -48,7 +48,7 @@
 
 ## 📱 Especificaciones
 
-- **Versión actual**: 1.2.0 (ver [CHANGELOG.md](docs/CHANGELOG.md) para historial completo)
+- **Versión actual**: 1.3.0 (ver [CHANGELOG.md](docs/CHANGELOG.md) para historial completo)
 - **Version Code**: 1
 - **Min SDK**: 24 (Android 7.0 Nougat)
 - **Target SDK**: 36
@@ -103,11 +103,15 @@ Las contribuciones son bienvenidas. Por favor:
 ## 🎮 Funcionalidades Principales
 
 - **Autenticación**: Registro, login, logout y modo invitado
-- **Gestión de Seeds**: Visualización y detalle de semillas con sistema de niveles (1-5)
+- **SplashScreen**: Pantalla de inicio con animación (SplashScreen API)
+- **Gestión de Seeds**: Creación, edición, visualización y detalle de semillas con sistema de niveles (1-5)
 - **Sistema de Riegos**: Registro de riegos con estados de ánimo (GOOD, OK, BAD) y notas
-- **Navegación**: Flujo completo entre Auth → Home → Seed Detail
-- **Tiempo Real**: Actualización automática de datos desde Firestore
+- **Estadísticas**: Visualización de estadísticas del usuario (total de seeds y waterings)
+- **Perfil de Usuario**: Gestión de perfil con observación en tiempo real
+- **Navegación**: Flujo completo con Bottom Navigation (Garden, Stats, Profile) y navegación entre pantallas
+- **Tiempo Real**: Actualización automática de datos desde Firestore con observación reactiva
 - **Validación**: Validación de email, contraseña y nombres en formularios
+- **Persistencia Offline**: Funcionamiento sin conexión con sincronización automática
 
 ---
 

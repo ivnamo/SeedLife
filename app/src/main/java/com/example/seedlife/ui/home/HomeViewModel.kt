@@ -89,18 +89,16 @@ class HomeViewModel(
 
         // Combinar seeds y filtros para aplicar búsqueda/filtrado
         viewModelScope.launch {
-            combine(
-                _uiState,
-                _searchFilters
-            ) { state, filters ->
+            combine(_uiState, _searchFilters) { state, filters ->
                 when (state) {
                     is UiState.Success -> {
-                        val filtered = applyFilters(state.data, filters)
-                        _filteredSeeds.value = filtered
+                        applyFilters(state.data, filters)
                     }
-                    else -> _filteredSeeds.value = emptyList()
+                    else -> emptyList()
                 }
-            }.collect()
+            }.collect { filtered ->
+                _filteredSeeds.value = filtered
+            }
         }
     }
 

@@ -34,8 +34,7 @@ app/src/main/java/com/example/seedlife/
 │   │   ├── SeedDetailScreen.kt       # Pantalla de detalle de seed
 │   │   └── SeedDetailViewModel.kt    # ViewModel para detalle de seed
 │   ├── seededitor/
-│   │   ├── SeedEditorScreen.kt       # Pantalla para crear/editar seeds
-│   │   └── SeedEditorViewModel       # ViewModel para editor de seeds
+│   │   ├── SeedEditorScreen.kt       # Pantalla para crear/editar seeds (ViewModel incluido en el mismo archivo)
 │   ├── session/
 │   │   └── SessionViewModel.kt       # ViewModel para gestión de sesión global
 │   ├── splash/
