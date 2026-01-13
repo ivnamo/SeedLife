@@ -6,30 +6,49 @@
 app/src/main/java/com/example/seedlife/
 ├── MainActivity.kt                    # Actividad principal de la aplicación
 ├── data/
+│   ├── FirestoreConfig.kt            # Configuración de Firestore (persistencia offline)
 │   ├── model/
 │   │   ├── User.kt                   # Modelo de datos del usuario
+│   │   ├── UserProfile.kt            # Modelo de perfil de usuario
 │   │   ├── Seed.kt                   # Modelo de datos de una seed (semilla)
 │   │   └── Watering.kt               # Modelo de datos de un riego (con WateringMood enum)
 │   └── repository/
 │       ├── AuthRepository.kt         # Repositorio de autenticación
-│       └── SeedRepository.kt         # Repositorio para gestión de seeds y waterings
+│       ├── SeedRepository.kt         # Repositorio para gestión de seeds y waterings
+│       ├── UserRepository.kt         # Repositorio para gestión de perfiles de usuario
+│       └── StatsRepository.kt        # Repositorio para estadísticas del usuario
 ├── navigation/
 │   └── NavGraph.kt                   # Configuración de navegación con Screen sealed class
 ├── ui/
 │   ├── auth/
 │   │   ├── AuthScreen.kt             # Pantalla de autenticación
 │   │   └── AuthViewModel.kt          # ViewModel para autenticación
+│   ├── common/
+│   │   └── UiState.kt                # Estados comunes de UI
 │   ├── home/
-│   │   └── HomeScreen.kt             # Pantalla principal con lista de seeds
+│   │   ├── HomeScreen.kt             # Pantalla principal con lista de seeds (Garden)
+│   │   └── HomeViewModel.kt          # ViewModel para home
+│   ├── profile/
+│   │   └── ProfileScreen.kt          # Pantalla de perfil de usuario
 │   ├── seeddetail/
 │   │   ├── SeedDetailScreen.kt       # Pantalla de detalle de seed
 │   │   └── SeedDetailViewModel.kt    # ViewModel para detalle de seed
+│   ├── seededitor/
+│   │   ├── SeedEditorScreen.kt       # Pantalla para crear/editar seeds
+│   │   └── SeedEditorViewModel       # ViewModel para editor de seeds
+│   ├── session/
+│   │   └── SessionViewModel.kt       # ViewModel para gestión de sesión global
+│   ├── splash/
+│   │   └── SplashScreen.kt           # Pantalla de inicio con animación
+│   ├── stats/
+│   │   └── StatsScreen.kt            # Pantalla de estadísticas
 │   └── theme/
 │       ├── Color.kt                  # Definiciones de colores
 │       ├── Theme.kt                  # Configuración del tema Material
 │       └── Type.kt                   # Configuración de tipografía
 └── util/
-    └── ValidationUtils.kt            # Utilidades para validación de formularios
+    ├── ValidationUtils.kt            # Utilidades para validación de formularios
+    └── FirebaseErrorMapper.kt        # Mapeo de errores de Firebase a mensajes amigables
 ```
 
 ## 🎯 Principios Arquitectónicos
@@ -41,34 +60,40 @@ app/src/main/java/com/example/seedlife/
 
 ### Estado Actual
 El proyecto implementa:
-- Una actividad principal (`MainActivity`) con navegación integrada
+- Una actividad principal (`MainActivity`) con navegación integrada y SplashScreen API
 - Sistema de temas configurado con soporte dinámico
 - Arquitectura MVVM completa con ViewModel y StateFlow
-- Repository Pattern para acceso a datos (AuthRepository, SeedRepository)
+- Repository Pattern para acceso a datos (AuthRepository, SeedRepository, UserRepository, StatsRepository)
 - Integración completa con Firebase (Authentication y Firestore)
-- Navegación con Jetpack Navigation Compose entre pantallas
-- Pantallas implementadas: `AuthScreen`, `HomeScreen`, `SeedDetailScreen`
+- Navegación con Jetpack Navigation Compose y Bottom Navigation Bar
+- Pantallas implementadas: `AuthScreen`, `HomeScreen` (Garden), `SeedDetailScreen`, `SeedEditorScreen`, `StatsScreen`, `ProfileScreen`
+- Gestión de sesión global con `SessionViewModel` separado de autenticación
 - Gestión de estado reactivo con Kotlin Coroutines y Flow
 - Sistema de Seeds con niveles (1-5) basado en riegos
 - Sistema de Waterings con estados de ánimo (GOOD, OK, BAD)
 - Modo invitado para uso sin autenticación
 - Validación de formularios con `ValidationUtils`
 - Observación en tiempo real de datos desde Firestore usando `addSnapshotListener`
+- Mapeo de errores de Firebase con `FirebaseErrorMapper` para mensajes amigables
+- Configuración de persistencia offline de Firestore
+- Sistema de estadísticas del usuario (total de seeds y waterings)
+- Perfiles de usuario con observación en tiempo real
 
 ## 📐 Patrones de Diseño Implementados
 
 ### MVVM (Model-View-ViewModel) ✅
-- **View**: Composables de Jetpack Compose (`AuthScreen`, `HomeScreen`, `SeedDetailScreen`)
-- **ViewModel**: AndroidX ViewModel para manejo de estado (`AuthViewModel`, `SeedDetailViewModel`)
-- **Model**: Clases de datos (`User.kt`, `Seed.kt`, `Watering.kt`) y lógica de negocio
+- **View**: Composables de Jetpack Compose (`AuthScreen`, `HomeScreen`, `SeedDetailScreen`, `SeedEditorScreen`, `StatsScreen`, `ProfileScreen`, `SplashScreen`)
+- **ViewModel**: AndroidX ViewModel para manejo de estado (`AuthViewModel`, `HomeViewModel`, `SeedDetailViewModel`, `SeedEditorViewModel`, `SessionViewModel`)
+- **Model**: Clases de datos (`User.kt`, `UserProfile.kt`, `Seed.kt`, `Watering.kt`) y lógica de negocio
 
 ### Repository Pattern ✅
-- Repositorios para abstraer fuentes de datos (`AuthRepository`, `SeedRepository`)
+- Repositorios para abstraer fuentes de datos (`AuthRepository`, `SeedRepository`, `UserRepository`, `StatsRepository`)
 - Integración con Firebase como fuente de datos remota
 - Uso de Kotlin Coroutines para operaciones asíncronas
 - Manejo de resultados con `Result<T>` para control de errores
 - Observación en tiempo real usando `callbackFlow` y `addSnapshotListener`
-- Operaciones CRUD para Seeds y Waterings
+- Operaciones CRUD para Seeds, Waterings, UserProfiles y Stats
+- Persistencia offline configurada mediante `FirestoreConfig`
 
 ### State Management
 - **StateFlow** para estado reactivo observable
@@ -79,9 +104,11 @@ El proyecto implementa:
 
 ### Navigation Pattern ✅
 - **Navigation Compose** 2.8.4 para navegación declarativa
-- Sealed class `Screen` para definición de rutas type-safe
-- NavGraph centralizado con argumentos tipados
-- Navegación entre Auth → Home → SeedDetail con parámetros
+- Sealed class `Screen` (`AuthScreen`, `AppScreen`) para definición de rutas type-safe
+- NavGraph separado para Auth y App (con Bottom Navigation)
+- Bottom Navigation Bar con tres secciones: Garden (Home), Stats, Profile
+- Navegación entre Auth → App (Garden/Stats/Profile) → SeedDetail/SeedEditor con parámetros
+- Navegación tipo-safe con rutas parametrizadas usando `createRoute()`
 
 ## 🎨 Sistema de Temas
 
@@ -101,15 +128,15 @@ Los colores están definidos en `ui/theme/Color.kt` y pueden ajustarse según la
 
 ### Flujo General:
 ```
-UI (Compose - AuthScreen/HomeScreen/SeedDetailScreen)
+UI (Compose - AuthScreen/HomeScreen/SeedDetailScreen/SeedEditorScreen/StatsScreen/ProfileScreen)
     ↓ (eventos de usuario)
-ViewModel (AuthViewModel/SeedDetailViewModel)
+ViewModel (AuthViewModel/HomeViewModel/SeedDetailViewModel/SeedEditorViewModel/SessionViewModel)
     ↓ (llamadas a métodos)
-Repository (AuthRepository/SeedRepository)
+Repository (AuthRepository/SeedRepository/UserRepository/StatsRepository)
     ↓ (operaciones asíncronas)
-Firebase (Authentication + Firestore)
+Firebase (Authentication + Firestore con persistencia offline)
     ↓ (resultados / snapshots en tiempo real)
-StateFlow / Flow (AuthState, Seed, Waterings)
+StateFlow / Flow (AuthState, SessionState, Seed, Waterings, UserProfile, UserStats)
     ↓ (observación reactiva)
 UI (actualización automática)
 ```
@@ -194,16 +221,23 @@ UI (actualización automática)
 
 ### Fase 3: Funcionalidades Avanzadas
 - [ ] Implementar inyección de dependencias (Hilt/Koin)
-- [x] Añadir navegación entre pantallas ✅
+- [x] Añadir navegación entre pantallas con Bottom Navigation ✅
 - [x] Añadir validación de formularios ✅
 - [x] Implementar sistema de niveles automático para seeds ✅
 - [x] Implementar sistema de estados de ánimo para riegos ✅
 - [x] Implementar modo invitado completo ✅
+- [x] Añadir creación/edición de seeds desde la app (SeedEditorScreen) ✅
+- [x] Implementar gestión de sesión global (SessionViewModel) ✅
+- [x] Añadir pantalla de estadísticas (StatsScreen) ✅
+- [x] Añadir pantalla de perfil (ProfileScreen) ✅
+- [x] Implementar SplashScreen con animación ✅
+- [x] Implementar mapeo de errores de Firebase (FirebaseErrorMapper) ✅
+- [x] Configurar persistencia offline de Firestore ✅
+- [x] Implementar sistema de perfiles de usuario (UserRepository, UserProfile) ✅
 - [ ] Implementar manejo de errores global con UI de errores
 - [ ] Implementar logging y analytics con Firebase Analytics
-- [ ] Añadir creación/edición de seeds desde la app
 - [ ] Implementar búsqueda y filtrado de seeds
-- [ ] Añadir estadísticas y gráficos de riegos
+- [ ] Añadir gráficos avanzados de estadísticas
 - [ ] Implementar notificaciones para recordatorios de riego
 - [ ] Añadir exportación de datos (CSV/JSON)
 
@@ -268,6 +302,8 @@ UI (actualización automática)
   - Base de datos NoSQL para almacenar datos estructurados
   - Estructura jerárquica por usuario (users/{uid}/seeds/{seedId}/waterings/{wateringId})
   - Observación en tiempo real con snapshot listeners
+  - Persistencia offline habilitada mediante `FirestoreConfig` para funcionamiento sin conexión
+  - Cache local automático para consultas recientes
 
 ### Modo Invitado
 - Permite usar la aplicación sin registro previo
@@ -306,12 +342,25 @@ UI (actualización automática)
   └── createdAt: Timestamp (fecha de creación, @ServerTimestamp)
 ```
 
+#### Colección de Estadísticas (subcolección de users)
+```
+/users/{uid}/stats/summary
+  ├── totalSeeds: Int (total de seeds del usuario)
+  └── totalWaterings: Int (total de waterings de todas las seeds)
+```
+
 ### Modelos de Datos
 
 #### User.kt
 - Representa un usuario de la aplicación
 - Sincronizado con Firebase Authentication
 - Contiene información básica: name, email
+
+#### UserProfile.kt
+- Modelo de perfil de usuario almacenado en Firestore
+- Se observa en tiempo real mediante `UserRepository`
+- Campos: name, email
+- Usado por `SessionViewModel` para gestionar el estado de sesión
 
 #### Seed.kt
 - Representa una "semilla" o elemento a cuidar
@@ -339,6 +388,26 @@ UI (actualización automática)
 - Se actualiza automáticamente cada vez que se añade un nuevo riego a través de `SeedRepository.addWatering()`
 - El cálculo se realiza en el servidor (Firestore) para mantener consistencia
 - `lastWateredAt` se actualiza con cada riego para tracking de actividad
+
+### Persistencia Offline
+- Configurada mediante `FirestoreConfig.enablePersistence()`
+- Permite que la aplicación funcione sin conexión a internet
+- Los datos se sincronizan automáticamente cuando se restaura la conexión
+- Cache local para consultas recientes
+
+### Gestión de Sesión (SessionViewModel)
+- **SessionViewModel** gestiona el estado global de la sesión separado de la autenticación
+- Sincroniza con `AuthViewModel` para mantener coherencia
+- Observa el perfil del usuario (`UserProfile`) en tiempo real mediante `UserRepository`
+- Maneja estados: usuario autenticado, modo invitado, y perfil del usuario
+- Utilizado por múltiples pantallas (ProfileScreen, StatsScreen) para acceso al estado de sesión
+- Permite cerrar sesión centralizadamente
+
+### Manejo de Errores
+- **FirebaseErrorMapper** mapea excepciones de Firebase a mensajes de error amigables en español
+- Maneja errores de Firebase Authentication (EMAIL_ALREADY_IN_USE, WRONG_PASSWORD, etc.)
+- Maneja errores de Firestore (PERMISSION_DENIED, UNAVAILABLE, etc.)
+- Integrado en repositorios para proporcionar feedback claro al usuario
 
 ### Archivo de Configuración
 - `google-services.json` en la raíz del proyecto (incluido en build.gradle.kts)

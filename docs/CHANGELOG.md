@@ -9,15 +9,51 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Cambios Planificados
 - Inyección de dependencias (Hilt/Koin) para mejor gestión de dependencias
-- Integración de Room para cache offline y funcionamiento sin conexión
+- Integración de Room para cache offline adicional (actualmente se usa persistencia offline de Firestore)
 - Mejoras en manejo de errores global con UI de errores consistente
-- Creación y edición de seeds desde la app (actualmente solo visualización)
-- Estadísticas y gráficos de riegos para visualización de progreso
+- Gráficos avanzados de estadísticas (actualmente hay estadísticas básicas)
 - Búsqueda y filtrado de seeds en HomeScreen
 - Notificaciones push para recordatorios de riego
 - Exportación de datos (CSV/JSON) para respaldo
 - Mejoras en UI/UX: animaciones, transiciones suaves
 - Sistema de logros/badges basado en niveles de seeds
+
+---
+
+## [1.3.0] - 2025-01-09
+
+### Agregado
+- **SplashScreen** con animación usando SplashScreen API (Android 12+)
+- **SessionViewModel** para gestión de sesión global separada de autenticación
+- **SeedEditorScreen** y **SeedEditorViewModel** para crear y editar seeds
+- **StatsScreen** para visualización de estadísticas del usuario (total de seeds y waterings)
+- **ProfileScreen** para gestión de perfil de usuario
+- **UserRepository** para operaciones de perfil de usuario con observación en tiempo real
+- **StatsRepository** para gestión y cálculo de estadísticas del usuario
+- **UserProfile** modelo de datos para perfiles de usuario
+- **FirebaseErrorMapper** utilidad para mapear excepciones de Firebase a mensajes amigables en español
+- **FirestoreConfig** configuración de persistencia offline de Firestore
+- **UiState** clase común para estados de UI
+- **Bottom Navigation Bar** con tres secciones: Garden (Home), Stats, Profile
+- Navegación mejorada con `AppScreen` sealed class para rutas type-safe
+- Sistema de estadísticas con estructura en Firestore (`/users/{uid}/stats/summary`)
+- Observación de perfiles de usuario en tiempo real
+- Sincronización automática de estado entre `AuthViewModel` y `SessionViewModel`
+- Validación de formularios en `SeedEditorScreen` con `ValidationUtils`
+
+### Cambios
+- Actualización de `NavGraph` con navegación separada para Auth y App
+- `HomeScreen` renombrado conceptualmente a "Garden" en la navegación
+- Mejora de estructura de navegación con Bottom Navigation
+- Refactorización de gestión de sesión separando `SessionViewModel` de `AuthViewModel`
+- Actualización de `MainActivity` para incluir SplashScreen y gestión de sesión mejorada
+
+### Dependencias Añadidas
+- N/A (mismas dependencias de 1.2.0)
+
+### Estructura de Datos
+- Nueva colección de estadísticas: `/users/{uid}/stats/summary`
+- Modelo `UserProfile` para perfiles de usuario
 
 ---
 
