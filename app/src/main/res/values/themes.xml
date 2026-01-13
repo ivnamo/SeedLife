@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.SeedLife" parent="android:Theme.Material.Light.NoActionBar" />
+    
+    <!-- Tema para SplashScreen API (Android 12+) -->
+    <style name="Theme.SeedLife.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/seed-bag</item>
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        <item name="postSplashScreenTheme">@style/Theme.SeedLife</item>
+    </style>
 </resources>

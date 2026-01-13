@@ -61,6 +61,9 @@ dependencies {
     // Navigation Compose
     implementation(libs.androidx.navigation.compose)
     
+    // SplashScreen API
+    implementation(libs.androidx.core.splashscreen)
+    
     // Firebase BOM (Bill of Materials) - gestiona todas las versiones de Firebase
     implementation(platform(libs.firebase.bom))
     // Firebase Authentication

@@ -4,11 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.seedlife.data.FirestoreConfig
@@ -17,10 +19,14 @@ import com.example.seedlife.navigation.AuthNavGraph
 import com.example.seedlife.ui.auth.AuthState
 import com.example.seedlife.ui.auth.AuthViewModel
 import com.example.seedlife.ui.session.SessionViewModel
+import com.example.seedlife.ui.splash.SplashScreen
 import com.example.seedlife.ui.theme.SeedLifeTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Instalar SplashScreen API (Android 12+)
+        val splashScreen = installSplashScreen()
+        
         super.onCreate(savedInstanceState)
         // Habilitar persistencia offline de Firestore ANTES de cualquier uso
         FirestoreConfig.enablePersistence(this)
@@ -40,6 +46,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SeedLifeApp() {
+    var showSplash by remember { mutableStateOf(true) }
     val authViewModel: AuthViewModel = viewModel()
     val sessionViewModel: SessionViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
@@ -64,29 +71,44 @@ fun SeedLifeApp() {
         }
     }
 
-    // Determinar qué gráfico mostrar
+    // Mostrar splash primero, luego la app
+    AnimatedVisibility(
+        visible = showSplash,
+        exit = fadeOut(animationSpec = tween(500))
+    ) {
+        SplashScreen(
+            onSplashComplete = { showSplash = false }
+        )
+    }
+
+    // Determinar qué gráfico mostrar después del splash
     val showApp = sessionState.uid != null || sessionState.isGuest
 
-    if (showApp) {
-        AppNavGraph(
-            navController = appNavController,
-            sessionViewModel = sessionViewModel,
-            uid = sessionState.uid,
-            isGuest = sessionState.isGuest,
-            onSignOut = {
-                sessionViewModel.signOut()
-                authNavController.navigate(com.example.seedlife.navigation.AuthScreen.Login.route) {
-                    popUpTo(0) { inclusive = true }
+    AnimatedVisibility(
+        visible = !showSplash,
+        enter = fadeIn(animationSpec = tween(500))
+    ) {
+        if (showApp) {
+            AppNavGraph(
+                navController = appNavController,
+                sessionViewModel = sessionViewModel,
+                uid = sessionState.uid,
+                isGuest = sessionState.isGuest,
+                onSignOut = {
+                    sessionViewModel.signOut()
+                    authNavController.navigate(com.example.seedlife.navigation.AuthScreen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
-            }
-        )
-    } else {
-        AuthNavGraph(
-            navController = authNavController,
-            authViewModel = authViewModel,
-            onAuthSuccess = {
-                // El estado se actualizará automáticamente por LaunchedEffect
-            }
-        )
+            )
+        } else {
+            AuthNavGraph(
+                navController = authNavController,
+                authViewModel = authViewModel,
+                onAuthSuccess = {
+                    // El estado se actualizará automáticamente por LaunchedEffect
+                }
+            )
+        }
     }
 }
