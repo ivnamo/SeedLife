@@ -9,7 +9,33 @@ import com.example.seedlife.util.FirebaseErrorMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.util.Date
+
+/**
+ * Filtros de búsqueda y ordenamiento
+ */
+data class SearchFilters(
+    val query: String = "",
+    val minLevel: Int? = null,
+    val maxLevel: Int? = null,
+    val sortBy: SortOption = SortOption.CREATED_DATE_DESC
+)
+
+/**
+ * Opciones de ordenamiento
+ */
+enum class SortOption {
+    CREATED_DATE_DESC,  // Más recientes primero
+    CREATED_DATE_ASC,   // Más antiguas primero
+    LEVEL_DESC,         // Mayor nivel primero
+    LEVEL_ASC,          // Menor nivel primero
+    TITLE_ASC,          // A-Z
+    TITLE_DESC,         // Z-A
+    LAST_WATERED_DESC,  // Regadas recientemente primero
+    LAST_WATERED_ASC    // Regadas hace tiempo primero
+}
 
 /**
  * ViewModel para HomeScreen
@@ -25,6 +51,12 @@ class HomeViewModel(
 
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
+
+    private val _searchFilters = MutableStateFlow(SearchFilters())
+    val searchFilters: StateFlow<SearchFilters> = _searchFilters.asStateFlow()
+
+    private val _filteredSeeds = MutableStateFlow<List<Seed>>(emptyList())
+    val filteredSeeds: StateFlow<List<Seed>> = _filteredSeeds.asStateFlow()
 
     // Para modo invitado: seeds en memoria
     private val guestSeeds = mutableListOf<Seed>()
@@ -53,6 +85,22 @@ class HomeViewModel(
                     )
                 }
             }
+        }
+
+        // Combinar seeds y filtros para aplicar búsqueda/filtrado
+        viewModelScope.launch {
+            combine(
+                _uiState,
+                _searchFilters
+            ) { state, filters ->
+                when (state) {
+                    is UiState.Success -> {
+                        val filtered = applyFilters(state.data, filters)
+                        _filteredSeeds.value = filtered
+                    }
+                    else -> _filteredSeeds.value = emptyList()
+                }
+            }.collect()
         }
     }
 
@@ -176,6 +224,75 @@ class HomeViewModel(
      */
     fun clearSnackbarMessage() {
         _snackbarMessage.value = null
+    }
+
+    /**
+     * Aplica los filtros a la lista de seeds
+     */
+    private fun applyFilters(seeds: List<Seed>, filters: SearchFilters): List<Seed> {
+        var result = seeds
+
+        // Búsqueda por texto
+        if (filters.query.isNotBlank()) {
+            val queryLower = filters.query.lowercase()
+            result = result.filter { seed ->
+                seed.title.lowercase().contains(queryLower) ||
+                seed.description.lowercase().contains(queryLower)
+            }
+        }
+
+        // Filtro por nivel
+        filters.minLevel?.let { min ->
+            result = result.filter { it.level >= min }
+        }
+        filters.maxLevel?.let { max ->
+            result = result.filter { it.level <= max }
+        }
+
+        // Ordenamiento
+        result = when (filters.sortBy) {
+            SortOption.CREATED_DATE_DESC -> result.sortedByDescending { it.createdAt ?: Date(0) }
+            SortOption.CREATED_DATE_ASC -> result.sortedBy { it.createdAt ?: Date(0) }
+            SortOption.LEVEL_DESC -> result.sortedByDescending { it.level }
+            SortOption.LEVEL_ASC -> result.sortedBy { it.level }
+            SortOption.TITLE_ASC -> result.sortedBy { it.title.lowercase() }
+            SortOption.TITLE_DESC -> result.sortedByDescending { it.title.lowercase() }
+            SortOption.LAST_WATERED_DESC -> result.sortedByDescending { it.lastWateredAt ?: Date(0) }
+            SortOption.LAST_WATERED_ASC -> result.sortedBy { it.lastWateredAt ?: Date(0) }
+        }
+
+        return result
+    }
+
+    /**
+     * Actualiza la consulta de búsqueda
+     */
+    fun updateSearchQuery(query: String) {
+        _searchFilters.value = _searchFilters.value.copy(query = query)
+    }
+
+    /**
+     * Actualiza el filtro de nivel
+     */
+    fun updateLevelFilter(minLevel: Int?, maxLevel: Int?) {
+        _searchFilters.value = _searchFilters.value.copy(
+            minLevel = minLevel,
+            maxLevel = maxLevel
+        )
+    }
+
+    /**
+     * Actualiza la opción de ordenamiento
+     */
+    fun updateSortOption(sortOption: SortOption) {
+        _searchFilters.value = _searchFilters.value.copy(sortBy = sortOption)
+    }
+
+    /**
+     * Limpia todos los filtros
+     */
+    fun clearFilters() {
+        _searchFilters.value = SearchFilters()
     }
 }
 
