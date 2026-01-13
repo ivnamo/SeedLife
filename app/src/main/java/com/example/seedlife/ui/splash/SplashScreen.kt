@@ -1,6 +1,7 @@
 package com.example.seedlife.ui.splash
 
 import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -27,14 +28,25 @@ fun SplashScreen(
     onSplashComplete: () -> Unit
 ) {
     var startAnimation by remember { mutableStateOf(false) }
-    val alphaAnim = rememberInfiniteAnimation(
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 1000,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        )
+    var alphaValue by remember { mutableStateOf(0.3f) }
+    
+    // Animación de fade infinito
+    LaunchedEffect(Unit) {
+        while (true) {
+            alphaValue = 1f
+            kotlinx.coroutines.delay(1000)
+            alphaValue = 0.3f
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+    
+    val alphaAnim by animateFloatAsState(
+        targetValue = alphaValue,
+        animationSpec = tween(
+            durationMillis = 1000,
+            easing = FastOutSlowInEasing
+        ),
+        label = "alpha"
     )
 
     LaunchedEffect(key1 = true) {
@@ -71,7 +83,7 @@ fun SplashScreen(
                 color = Color(0xFF4CAF50), // Verde hoja
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .alpha(alphaAnim.value)
+                    .alpha(alphaAnim)
                     .padding(top = 16.dp)
             )
         }
