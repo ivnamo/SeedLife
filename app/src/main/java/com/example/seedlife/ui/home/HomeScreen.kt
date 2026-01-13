@@ -286,6 +286,18 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Obtiene el recurso de imagen según el nivel de la semilla
+ */
+@Composable
+fun getLevelImageResource(level: Int): Int {
+    return when (level) {
+        1 -> R.drawable.seed_bag
+        2 -> R.drawable.planta
+        else -> R.drawable.plantas // Nivel 3 o superior
+    }
+}
+
 @Composable
 fun SeedItem(
     seed: Seed,
@@ -322,11 +334,22 @@ fun SeedItem(
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Text(
-                        text = "Nivel: ${seed.level}",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    // Mostrar imagen y texto del nivel juntos
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = getLevelImageResource(seed.level)),
+                            contentDescription = "Nivel ${seed.level}",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Nivel: ${seed.level}",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
                 
                 IconButton(onClick = onExpandChange) {
