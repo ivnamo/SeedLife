@@ -12,11 +12,55 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Integración de Room para cache offline adicional (actualmente se usa persistencia offline de Firestore)
 - Mejoras en manejo de errores global con UI de errores consistente
 - Gráficos avanzados de estadísticas (actualmente hay estadísticas básicas)
-- Búsqueda y filtrado de seeds en HomeScreen
 - Notificaciones push para recordatorios de riego
 - Exportación de datos (CSV/JSON) para respaldo
 - Mejoras en UI/UX: animaciones, transiciones suaves
 - Sistema de logros/badges basado en niveles de seeds
+
+---
+
+## [1.4.0] - 2025-01-09
+
+### Agregado
+- **Sistema de búsqueda y filtrado completo** en HomeScreen con funcionalidades avanzadas
+- Búsqueda por texto (título y descripción de seeds) con barra de búsqueda integrada
+- Filtrado por nivel (rango mínimo y máximo) mediante diálogo de filtros
+- Sistema de ordenamiento con 8 opciones: fecha de creación (asc/desc), nivel (asc/desc), título (A-Z/Z-A), última fecha de riego (asc/desc)
+- `SearchFilters` data class para gestión de filtros con StateFlow
+- `SortOption` enum para opciones de ordenamiento type-safe
+- `FilterDialog` y `FilterChips` componentes para UI de filtros
+- Barra de búsqueda expandible con icono de búsqueda en TopBar
+- `EmptySearchState` componente para estado cuando no hay resultados de búsqueda
+- **Recursos visuales mejorados**:
+  - `empty_garden.png` - Ilustración para estado vacío (sin seeds)
+  - `splash_illustration.png` - Ilustración para pantalla de splash
+  - `seed_bag.png` - Imagen para seeds nivel 1
+  - `planta.png` - Imagen para seeds nivel 2
+  - `plantas.png` - Imagen para seeds nivel 3 o superior
+  - `ic_filter_list.xml` - Icono de filtros para TopBar
+- Sistema de imágenes dinámicas según nivel (`getLevelImageResource()`) en HomeScreen
+- **Nueva paleta de colores** temática de jardín/naturaleza:
+  - Colores Light: LeafGreen, SoftGreen, EarthBrown, LightGreenBg, WhiteSurface
+  - Colores Dark: LeafGreenDark, SoftGreenDark, EarthBrownDark, DarkGreenBg, DarkSurface
+- Eliminación de seeds con diálogo de confirmación (`DeleteSeedDialog`)
+- Snackbar integrado para mensajes de éxito/error en operaciones
+- Estado expandible/colapsable para items de seeds en lista
+- Mejoras en UI de estado vacío con ilustración y mensaje descriptivo
+
+### Cambios
+- Actualización completa de paleta de colores de púrpura/rosa a tema jardín/naturaleza (verdes y marrones)
+- `LightColorScheme` y `DarkColorScheme` actualizados con nueva paleta
+- Tema dinámico desactivado por defecto para usar paleta personalizada
+- `HomeScreen` mejorado con funcionalidades de búsqueda, filtrado y ordenamiento
+- `HomeViewModel` ampliado con lógica de filtrado y ordenamiento usando `combine` de Flows
+- SplashScreen actualizado con ilustración personalizada y animación de fade
+- Mejora de experiencia de usuario con estados visuales mejorados (vacío, búsqueda sin resultados)
+
+### Recursos Añadidos
+- Drawables: `empty_garden.png`, `splash_illustration.png`, `seed_bag.png`, `planta.png`, `plantas.png`, `ic_filter_list.xml`
+
+### Dependencias Añadidas
+- `androidx.core:core-splashscreen` (SplashScreen API)
 
 ---
 

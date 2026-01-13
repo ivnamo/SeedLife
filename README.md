@@ -15,6 +15,9 @@
 - Repository Pattern para acceso a datos
 - Sistema de gestión de Seeds (semillas) con niveles
 - Sistema de riegos (Waterings) con estados de ánimo
+- Búsqueda y filtrado avanzado de seeds (por texto, nivel, ordenamiento)
+- Recursos visuales mejorados (imágenes dinámicas según nivel)
+- Paleta de colores temática de jardín/naturaleza
 - Modo invitado para uso sin autenticación
 - Validación de formularios con utilidades integradas
 - Observación en tiempo real de datos desde Firestore
@@ -48,7 +51,7 @@
 
 ## 📱 Especificaciones
 
-- **Versión actual**: 1.3.0 (ver [CHANGELOG.md](docs/CHANGELOG.md) para historial completo)
+- **Versión actual**: 1.4.0 (ver [CHANGELOG.md](docs/CHANGELOG.md) para historial completo)
 - **Version Code**: 1
 - **Min SDK**: 24 (Android 7.0 Nougat)
 - **Target SDK**: 36
@@ -105,6 +108,7 @@ Las contribuciones son bienvenidas. Por favor:
 - **Autenticación**: Registro, login, logout y modo invitado
 - **SplashScreen**: Pantalla de inicio con animación (SplashScreen API)
 - **Gestión de Seeds**: Creación, edición, visualización y detalle de semillas con sistema de niveles (1-5)
+- **Búsqueda y Filtrado**: Búsqueda por texto, filtrado por nivel, y 8 opciones de ordenamiento
 - **Sistema de Riegos**: Registro de riegos con estados de ánimo (GOOD, OK, BAD) y notas
 - **Estadísticas**: Visualización de estadísticas del usuario (total de seeds y waterings)
 - **Perfil de Usuario**: Gestión de perfil con observación en tiempo real
@@ -112,6 +116,7 @@ Las contribuciones son bienvenidas. Por favor:
 - **Tiempo Real**: Actualización automática de datos desde Firestore con observación reactiva
 - **Validación**: Validación de email, contraseña y nombres en formularios
 - **Persistencia Offline**: Funcionamiento sin conexión con sincronización automática
+- **Recursos Visuales**: Imágenes dinámicas según nivel, ilustraciones para estados vacíos y splash screen
 
 ---
 

@@ -60,16 +60,20 @@ app/src/main/java/com/example/seedlife/
 ### Estado Actual
 El proyecto implementa:
 - Una actividad principal (`MainActivity`) con navegación integrada y SplashScreen API
-- Sistema de temas configurado con soporte dinámico
+- Sistema de temas configurado con paleta temática de jardín/naturaleza (verdes y marrones)
 - Arquitectura MVVM completa con ViewModel y StateFlow
 - Repository Pattern para acceso a datos (AuthRepository, SeedRepository, UserRepository, StatsRepository)
 - Integración completa con Firebase (Authentication y Firestore)
 - Navegación con Jetpack Navigation Compose y Bottom Navigation Bar
-- Pantallas implementadas: `AuthScreen`, `HomeScreen` (Garden), `SeedDetailScreen`, `SeedEditorScreen`, `StatsScreen`, `ProfileScreen`
+- Pantallas implementadas: `AuthScreen`, `HomeScreen` (Garden), `SeedDetailScreen`, `SeedEditorScreen`, `StatsScreen`, `ProfileScreen`, `SplashScreen`
 - Gestión de sesión global con `SessionViewModel` separado de autenticación
 - Gestión de estado reactivo con Kotlin Coroutines y Flow
 - Sistema de Seeds con niveles (1-5) basado en riegos
 - Sistema de Waterings con estados de ánimo (GOOD, OK, BAD)
+- **Sistema de búsqueda y filtrado completo** en HomeScreen:
+  - Búsqueda por texto (título y descripción)
+  - Filtrado por nivel (rango min/max)
+  - Ordenamiento con 8 opciones (fecha, nivel, título, última fecha de riego)
 - Modo invitado para uso sin autenticación
 - Validación de formularios con `ValidationUtils`
 - Observación en tiempo real de datos desde Firestore usando `addSnapshotListener`
@@ -77,6 +81,10 @@ El proyecto implementa:
 - Configuración de persistencia offline de Firestore
 - Sistema de estadísticas del usuario (total de seeds y waterings)
 - Perfiles de usuario con observación en tiempo real
+- **Recursos visuales mejorados**:
+  - Imágenes dinámicas según nivel de seed (seed_bag, planta, plantas)
+  - Ilustraciones para estados vacíos y splash screen
+  - Sistema de iconografía integrado
 
 ## 📐 Patrones de Diseño Implementados
 
@@ -109,6 +117,16 @@ El proyecto implementa:
 - Navegación entre Auth → App (Garden/Stats/Profile) → SeedDetail/SeedEditor con parámetros
 - Navegación tipo-safe con rutas parametrizadas usando `createRoute()`
 
+### Search & Filter Pattern ✅
+- **Sistema de búsqueda y filtrado** implementado en `HomeViewModel` y `HomeScreen`
+- `SearchFilters` data class para gestionar estado de filtros (query, minLevel, maxLevel, sortBy)
+- `SortOption` enum para opciones de ordenamiento type-safe (8 opciones disponibles)
+- Filtrado reactivo usando `combine` de Flows para combinar seeds y filtros
+- Componentes UI: `FilterDialog`, `FilterChips`, `SearchBar` integrados en HomeScreen
+- Búsqueda en tiempo real por texto (título y descripción)
+- Filtrado por rango de niveles
+- Ordenamiento múltiple (fecha, nivel, título, última fecha de riego)
+
 ## 🎨 Sistema de Temas
 
 ### Configuración Actual
@@ -117,11 +135,21 @@ El proyecto implementa:
 - Modo oscuro/claro basado en configuración del sistema
 
 ### Colores
-- **Light Theme**: Purple40, PurpleGrey40, Pink40
-- **Dark Theme**: Purple80, PurpleGrey80, Pink80
+- **Light Theme** (tema jardín/naturaleza):
+  - Primary: `LeafGreen` (0xFF4CAF50) - Verde hoja
+  - Secondary: `SoftGreen` (0xFFA5D6A7) - Verde suave
+  - Tertiary: `EarthBrown` (0xFF8D6E63) - Tierra/madera
+  - Background: `LightGreenBg` (0xFFF1F8E9) - Verde muy claro
+  - Surface: `WhiteSurface` (0xFFFFFFFF) - Blanco
+- **Dark Theme**:
+  - Primary: `LeafGreenDark` (0xFF66BB6A) - Verde más claro para dark
+  - Secondary: `SoftGreenDark` (0xFFC8E6C9) - Verde suave más claro
+  - Tertiary: `EarthBrownDark` (0xFFA1887F) - Tierra más clara
+  - Background: `DarkGreenBg` (0xFF1B5E20) - Verde oscuro
+  - Surface: `DarkSurface` (0xFF2E7D32) - Verde superficie oscuro
 
 ### Personalización
-Los colores están definidos en `ui/theme/Color.kt` y pueden ajustarse según las necesidades del proyecto.
+Los colores están definidos en `ui/theme/Color.kt` y siguen una paleta temática de jardín/naturaleza. El tema dinámico está desactivado por defecto para usar la paleta personalizada.
 
 ## 🔄 Flujo de Datos
 
@@ -186,6 +214,9 @@ UI (actualización automática)
 - `com.google.firebase:firebase-firestore` (Base de datos)
 - `com.google.gms:google-services:4.4.2` (Plugin)
 
+### SplashScreen
+- `androidx.core:core-splashscreen` (SplashScreen API para Android 12+)
+
 ### Testing
 - **Unit Testing**:
   - `junit:junit:4.13.2` - Framework básico de testing
@@ -233,9 +264,11 @@ UI (actualización automática)
 - [x] Implementar mapeo de errores de Firebase (FirebaseErrorMapper) ✅
 - [x] Configurar persistencia offline de Firestore ✅
 - [x] Implementar sistema de perfiles de usuario (UserRepository, UserProfile) ✅
+- [x] Implementar búsqueda y filtrado de seeds ✅
+- [x] Añadir recursos visuales mejorados (imágenes según nivel, ilustraciones) ✅
+- [x] Actualizar paleta de colores a tema jardín/naturaleza ✅
 - [ ] Implementar manejo de errores global con UI de errores
 - [ ] Implementar logging y analytics con Firebase Analytics
-- [ ] Implementar búsqueda y filtrado de seeds
 - [ ] Añadir gráficos avanzados de estadísticas
 - [ ] Implementar notificaciones para recordatorios de riego
 - [ ] Añadir exportación de datos (CSV/JSON)
@@ -407,6 +440,17 @@ UI (actualización automática)
 - Maneja errores de Firebase Authentication (EMAIL_ALREADY_IN_USE, WRONG_PASSWORD, etc.)
 - Maneja errores de Firestore (PERMISSION_DENIED, UNAVAILABLE, etc.)
 - Integrado en repositorios para proporcionar feedback claro al usuario
+
+### Recursos Visuales
+- **Sistema de imágenes según nivel**: Las seeds muestran diferentes imágenes según su nivel:
+  - Nivel 1: `seed_bag.png` (bolsa de semillas)
+  - Nivel 2: `planta.png` (planta joven)
+  - Nivel 3+: `plantas.png` (plantas maduras)
+- **Ilustraciones**:
+  - `empty_garden.png` - Muestra cuando no hay seeds (estado vacío)
+  - `splash_illustration.png` - Ilustración de la pantalla de inicio
+- **Iconografía**: `ic_filter_list.xml` para icono de filtros
+- Función `getLevelImageResource()` en HomeScreen para obtener imagen según nivel
 
 ### Archivo de Configuración
 - `google-services.json` en la raíz del proyecto (incluido en build.gradle.kts)
