@@ -67,6 +67,20 @@ fun SeedDetailScreen(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Función helper para generar Uri temporal
+    fun getImageUri(): Uri? {
+        return try {
+            val imageFile = File(context.cacheDir, "seed_${System.currentTimeMillis()}.jpg")
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                imageFile
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     // Launcher para tomar foto
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -92,20 +106,6 @@ fun SeedDetailScreen(
             coroutineScope.launch {
                 snackbarHostState.showSnackbar("Se necesita permiso de cámara para tomar fotos")
             }
-        }
-    }
-
-    // Función helper para generar Uri temporal
-    fun getImageUri(): Uri? {
-        return try {
-            val imageFile = File(context.cacheDir, "seed_${System.currentTimeMillis()}.jpg")
-            FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                imageFile
-            )
-        } catch (e: Exception) {
-            null
         }
     }
 
