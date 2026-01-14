@@ -311,6 +311,11 @@ class SeedRepository {
         uri: Uri
     ): Result<String> {
         return try {
+            // Verificar que el URI es válido
+            if (uri == Uri.EMPTY) {
+                return Result.failure(Exception("URI de imagen inválido"))
+            }
+
             // Crear referencia en Storage: users/{uid}/seeds/{seedId}/cover_{timestamp}.jpg
             val timestamp = System.currentTimeMillis()
             val storageRef = storage.reference
@@ -322,23 +327,42 @@ class SeedRepository {
 
             // Subir el archivo
             val uploadTask = storageRef.putFile(uri)
-            uploadTask.await()
+            val snapshot = uploadTask.await()
 
-            // Obtener la URL de descarga
-            val downloadUrl = storageRef.downloadUrl.await().toString()
+            // Verificar que la subida fue exitosa
+            if (snapshot.task.isSuccessful) {
+                // Obtener la URL de descarga
+                val downloadUrl = storageRef.downloadUrl.await().toString()
 
-            // Actualizar Firestore con el photoUrl
-            val seedRef = firestore
-                .collection("users")
-                .document(uid)
-                .collection("seeds")
-                .document(seedId)
+                // Actualizar Firestore con el photoUrl
+                val seedRef = firestore
+                    .collection("users")
+                    .document(uid)
+                    .collection("seeds")
+                    .document(seedId)
 
-            seedRef.update("photoUrl", downloadUrl).await()
+                seedRef.update("photoUrl", downloadUrl).await()
 
-            Result.success(downloadUrl)
+                Result.success(downloadUrl)
+            } else {
+                val error = snapshot.error ?: Exception("Error desconocido al subir la imagen")
+                Result.failure(Exception(FirebaseErrorMapper.mapException(error as? Exception ?: Exception(error.message, error))))
+            }
         } catch (e: Exception) {
-            Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
+            // Manejo específico de errores de Storage
+            val errorMessage = when {
+                e.message?.contains("404") == true || e.message?.contains("Not Found") == true -> {
+                    "Firebase Storage no está configurado. Verifica que Storage esté habilitado en Firebase Console y que las reglas de seguridad estén configuradas."
+                }
+                e.message?.contains("403") == true || e.message?.contains("Permission denied") == true -> {
+                    "No tienes permiso para subir archivos. Verifica las reglas de Storage."
+                }
+                e.message?.contains("network") == true || e.message?.contains("Network") == true -> {
+                    "Error de conexión. Verifica tu conexión a internet."
+                }
+                else -> FirebaseErrorMapper.mapException(e)
+            }
+            Result.failure(Exception(errorMessage))
         }
     }
 }

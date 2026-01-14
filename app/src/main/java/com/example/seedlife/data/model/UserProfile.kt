@@ -13,5 +13,9 @@ data class UserProfile(
     
     @get:PropertyName("email")
     @set:PropertyName("email")
-    var email: String = ""
+    var email: String = "",
+    
+    @get:PropertyName("createdAt")
+    @set:PropertyName("createdAt")
+    var createdAt: Long = System.currentTimeMillis()
 )

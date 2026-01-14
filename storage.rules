@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function para verificar que el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function para verificar que el usuario es el propietario
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Reglas para fotos de seeds: users/{userId}/seeds/{seedId}/{fileName}
+    match /users/{userId}/seeds/{seedId}/{fileName} {
+      // Solo el propietario puede leer y escribir sus fotos de seeds
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Reglas para otros archivos de usuario: users/{userId}/{allPaths=**}
+    match /users/{userId}/{allPaths=**} {
+      // Solo el propietario puede leer y escribir sus archivos
+      allow read, write: if isOwner(userId);
+    }
+  }
+}
