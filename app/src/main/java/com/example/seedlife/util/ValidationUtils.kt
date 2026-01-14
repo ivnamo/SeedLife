@@ -25,10 +25,64 @@ object ValidationUtils {
     /**
      * Valida si una contraseña cumple con los requisitos mínimos
      * @param password La contraseña a validar
-     * @return true si la contraseña tiene al menos 6 caracteres
+     * @param minLength Longitud mínima requerida (por defecto 6)
+     * @return true si la contraseña tiene al menos minLength caracteres
      */
-    fun isValidPassword(password: String): Boolean {
-        return password.length >= 6
+    fun isValidPassword(password: String, minLength: Int = 6): Boolean {
+        return password.length >= minLength
+    }
+
+    /**
+     * Valida si un nombre cumple con los requisitos mínimos
+     * @param name El nombre a validar
+     * @param minLength Longitud mínima requerida (por defecto 2)
+     * @return true si el nombre tiene al menos minLength caracteres después de trim
+     */
+    fun isValidName(name: String, minLength: Int = 2): Boolean {
+        return name.trim().length >= minLength
+    }
+
+    /**
+     * Obtiene el mensaje de error para un email, o null si es válido
+     * @param email El email a validar
+     * @return Mensaje de error o null si el email es válido
+     */
+    fun getEmailError(email: String): String? {
+        val trimmed = email.trim()
+        return when {
+            trimmed.isEmpty() -> "El email no puede estar vacío"
+            !isValidEmail(email) -> "El formato del email no es válido"
+            else -> null
+        }
+    }
+
+    /**
+     * Obtiene el mensaje de error para una contraseña, o null si es válida
+     * @param password La contraseña a validar
+     * @param minLength Longitud mínima requerida (por defecto 6)
+     * @return Mensaje de error o null si la contraseña es válida
+     */
+    fun getPasswordError(password: String, minLength: Int = 6): String? {
+        return when {
+            password.isEmpty() -> "La contraseña no puede estar vacía"
+            password.length < minLength -> "La contraseña debe tener al menos $minLength caracteres"
+            else -> null
+        }
+    }
+
+    /**
+     * Obtiene el mensaje de error para un nombre, o null si es válido
+     * @param name El nombre a validar
+     * @param minLength Longitud mínima requerida (por defecto 2)
+     * @return Mensaje de error o null si el nombre es válido
+     */
+    fun getNameError(name: String, minLength: Int = 2): String? {
+        val trimmed = name.trim()
+        return when {
+            trimmed.isEmpty() -> "El nombre no puede estar vacío"
+            trimmed.length < minLength -> "El nombre debe tener al menos $minLength caracteres"
+            else -> null
+        }
     }
 
     /**

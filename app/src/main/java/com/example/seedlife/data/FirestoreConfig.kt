@@ -19,8 +19,10 @@ object FirestoreConfig {
         if (persistenceEnabled) return
 
         try {
+            // La persistencia está habilitada por defecto en versiones recientes de Firestore
+            // No es necesario configurarla explícitamente
+            // Solo configuramos otros ajustes si es necesario
             val settings = FirebaseFirestoreSettings.Builder()
-                .setPersistenceEnabled(true)
                 .build()
             
             FirebaseFirestore.getInstance().firestoreSettings = settings
