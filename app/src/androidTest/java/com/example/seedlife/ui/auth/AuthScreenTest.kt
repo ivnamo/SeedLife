@@ -19,7 +19,7 @@ class AuthScreenTest {
     val composeTestRule = createComposeRule()
     
     @Test
-    fun `pantalla de login muestra campos de email y contraseña`() {
+    fun pantallaDeLoginMuestraCamposDeEmailYContrasena() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)
@@ -42,7 +42,7 @@ class AuthScreenTest {
     }
     
     @Test
-    fun `pantalla de registro muestra campo de nombre adicional`() {
+    fun pantallaDeRegistroMuestraCampoDeNombreAdicional() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)
@@ -67,7 +67,7 @@ class AuthScreenTest {
     }
     
     @Test
-    fun `botón de login está deshabilitado cuando campos están vacíos`() {
+    fun botonDeLoginEstaDeshabilitadoCuandoCamposEstanVacios() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)
@@ -86,7 +86,7 @@ class AuthScreenTest {
     }
     
     @Test
-    fun `botón de login se habilita cuando email y contraseña tienen contenido`() {
+    fun botonDeLoginSeHabilitaCuandoEmailYContrasenaTienenContenido() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)
@@ -113,7 +113,7 @@ class AuthScreenTest {
     }
     
     @Test
-    fun `botón de registro está deshabilitado cuando nombre está vacío`() {
+    fun botonDeRegistroEstaDeshabilitadoCuandoNombreEstaVacio() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)
@@ -142,7 +142,7 @@ class AuthScreenTest {
     }
     
     @Test
-    fun `botón de registro se habilita cuando todos los campos están completos`() {
+    fun botonDeRegistroSeHabilitaCuandoTodosLosCamposEstanCompletos() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)
@@ -173,7 +173,7 @@ class AuthScreenTest {
     }
     
     @Test
-    fun `cambiar entre login y registro actualiza la UI correctamente`() {
+    fun cambiarEntreLoginYRegistroActualizaLaUICorrectamente() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)
@@ -208,7 +208,7 @@ class AuthScreenTest {
     }
     
     @Test
-    fun `botón entrar como invitado está siempre habilitado cuando no hay loading`() {
+    fun botonEntrarComoInvitadoEstaSiempreHabilitadoCuandoNoHayLoading() {
         // Given
         val mockRepository = mockk<AuthRepository>(relaxed = true)
         val viewModel = AuthViewModel(mockRepository)

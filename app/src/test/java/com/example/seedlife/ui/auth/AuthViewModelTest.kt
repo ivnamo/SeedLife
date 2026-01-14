@@ -52,12 +52,11 @@ class AuthViewModelTest {
         viewModel.authState.test {
             // Skip el estado inicial (Idle)
             skipItems(1)
-            val loadingState = awaitItem()
-            assertTrue(loadingState is AuthState.Loading)
+            // El tipo Loading está garantizado después de skipItems(1)
+            awaitItem() as AuthState.Loading
             
-            val successState = awaitItem()
-            assertTrue(successState is AuthState.Success)
-            assertEquals(uid, (successState as AuthState.Success).userId)
+            val successState = awaitItem() as AuthState.Success
+            assertEquals(uid, successState.userId)
             assertEquals(user, successState.user)
             assertFalse(successState.isGuest)
         }
@@ -85,12 +84,11 @@ class AuthViewModelTest {
         viewModel.authState.test {
             // Skip el estado inicial (Idle)
             skipItems(1)
-            val loadingState = awaitItem()
-            assertTrue(loadingState is AuthState.Loading)
+            // El tipo Loading está garantizado después de skipItems(1)
+            awaitItem() as AuthState.Loading
             
-            val errorState = awaitItem()
-            assertTrue(errorState is AuthState.Error)
-            assertEquals(errorMessage, (errorState as AuthState.Error).message)
+            val errorState = awaitItem() as AuthState.Error
+            assertEquals(errorMessage, errorState.message)
         }
         
         coVerify { mockRepository.login(email, password) }
@@ -119,12 +117,11 @@ class AuthViewModelTest {
         viewModel.authState.test {
             // Skip el estado inicial (Idle)
             skipItems(1)
-            val loadingState = awaitItem()
-            assertTrue(loadingState is AuthState.Loading)
+            // El tipo Loading está garantizado después de skipItems(1)
+            awaitItem() as AuthState.Loading
             
-            val successState = awaitItem()
-            assertTrue(successState is AuthState.Success)
-            assertEquals(uid, (successState as AuthState.Success).userId)
+            val successState = awaitItem() as AuthState.Success
+            assertEquals(uid, successState.userId)
             assertEquals(user, successState.user)
             assertFalse(successState.isGuest)
         }
@@ -153,12 +150,11 @@ class AuthViewModelTest {
         viewModel.authState.test {
             // Skip el estado inicial (Idle)
             skipItems(1)
-            val loadingState = awaitItem()
-            assertTrue(loadingState is AuthState.Loading)
+            // El tipo Loading está garantizado después de skipItems(1)
+            awaitItem() as AuthState.Loading
             
-            val errorState = awaitItem()
-            assertTrue(errorState is AuthState.Error)
-            assertEquals(errorMessage, (errorState as AuthState.Error).message)
+            val errorState = awaitItem() as AuthState.Error
+            assertEquals(errorMessage, errorState.message)
         }
         
         coVerify { mockRepository.register(email, password, name) }

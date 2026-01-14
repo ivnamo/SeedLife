@@ -40,6 +40,15 @@ android {
     buildFeatures {
         compose = true
     }
+    
+    packaging {
+        resources {
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/NOTICE.md"
+            excludes += "/META-INF/NOTICE.txt"
+        }
+    }
 }
 
 dependencies {
