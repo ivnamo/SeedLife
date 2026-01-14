@@ -21,7 +21,8 @@ import java.util.Date
  */
 class SeedRepository {
     private val firestore = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+    // Especificar el bucket correcto explícitamente
+    private val storage = FirebaseStorage.getInstance("gs://seedlife-3a4d8")
 
     /**
      * Observa los riegos de una seed en tiempo real
