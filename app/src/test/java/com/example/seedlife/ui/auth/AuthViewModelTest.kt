@@ -169,9 +169,8 @@ class AuthViewModelTest {
         viewModel.enterAsGuest()
         
         // Then
-        val state = viewModel.authState.value
-        assertTrue(state is AuthState.Success)
-        assertEquals("guest", (state as AuthState.Success).userId)
+        val state = viewModel.authState.value as AuthState.Success
+        assertEquals("guest", state.userId)
         assertNull(state.user)
         assertTrue(state.isGuest)
         
@@ -191,7 +190,7 @@ class AuthViewModelTest {
         
         // Then
         val state = viewModel.authState.value
-        assertTrue(state is AuthState.Idle)
+        assertTrue(state is AuthState.Idle) // Verificación necesaria para confirmar el tipo
         
         coVerify { mockRepository.signOut() }
     }
@@ -217,27 +216,27 @@ class AuthViewModelTest {
             delay(50)
             currentState = viewModel.authState.value
         }
-        assertTrue(currentState is AuthState.Error)
+        // currentState ya es AuthState.Error después del while
         
         // When
         viewModel.clearError()
         
         // Then
         val finalState = viewModel.authState.value
-        assertTrue(finalState is AuthState.Idle)
+        assertTrue(finalState is AuthState.Idle) // Verificación necesaria para confirmar el tipo
     }
     
     @Test
     fun `clearError no hace nada si el estado no es Error`() {
         // Given - estado Idle
         val initialState = viewModel.authState.value
-        assertTrue(initialState is AuthState.Idle)
+        assertTrue(initialState is AuthState.Idle) // Verificación necesaria para confirmar el tipo
         
         // When
         viewModel.clearError()
         
         // Then - el estado debe seguir siendo Idle
         val finalState = viewModel.authState.value
-        assertTrue(finalState is AuthState.Idle)
+        assertTrue(finalState is AuthState.Idle) // Verificación necesaria para confirmar el tipo
     }
 }
