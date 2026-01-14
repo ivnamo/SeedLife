@@ -78,11 +78,12 @@ fun SeedLifeApp() {
     // Ejecutar backfill de datos mock automáticamente (solo una vez por usuario autenticado)
     var hasSeededData by remember { mutableStateOf(false) }
     LaunchedEffect(sessionState.uid) {
-        if (sessionState.uid != null && !sessionState.isGuest && !hasSeededData) {
+        val currentUid = sessionState.uid
+        if (currentUid != null && !sessionState.isGuest && !hasSeededData) {
             hasSeededData = true
             // Ejecutar en background sin bloquear la UI
             launch(Dispatchers.IO) {
-                MockDataSeeder.seedMockData(sessionState.uid)
+                MockDataSeeder.seedMockData(currentUid)
             }
         }
     }
