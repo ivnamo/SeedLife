@@ -10,16 +10,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -56,6 +58,7 @@ fun SeedDetailScreen(
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var showWateringDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -174,7 +177,9 @@ fun SeedDetailScreen(
                                 Button(
                                     onClick = {
                                         if (isGuest) {
-                                            snackbarHostState.showSnackbar("Solo disponible con cuenta")
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar("Solo disponible con cuenta")
+                                            }
                                         } else {
                                             val uri = getImageUri()
                                             if (uri != null) {
@@ -188,10 +193,13 @@ fun SeedDetailScreen(
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp)
                                 ) {
-                                    Icon(
-                                        Icons.Default.PhotoCamera,
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_photo_camera),
                                         contentDescription = null,
-                                        modifier = Modifier.padding(end = 8.dp)
+                                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .padding(end = 8.dp)
                                     )
                                     Text("Añadir foto")
                                 }
