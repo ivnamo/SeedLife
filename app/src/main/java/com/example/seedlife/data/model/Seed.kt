@@ -28,6 +28,10 @@ data class Seed(
     @set:PropertyName("lastWateredAt")
     var lastWateredAt: Date? = null,
     
+    @get:PropertyName("photoUrl")
+    @set:PropertyName("photoUrl")
+    var photoUrl: String? = null,
+    
     @get:PropertyName("createdAt")
     @set:PropertyName("createdAt")
     @ServerTimestamp

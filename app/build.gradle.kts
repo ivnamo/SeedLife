@@ -80,6 +80,14 @@ dependencies {
     implementation(libs.firebase.auth)
     // Cloud Firestore
     implementation(libs.firebase.firestore)
+    // Firebase Storage
+    implementation(libs.firebase.storage)
+    
+    // Coroutines para Firebase
+    implementation(libs.kotlinx.coroutines.play.services)
+    
+    // Coil para cargar imágenes
+    implementation(libs.coil.compose)
     
     // Testing
     testImplementation(libs.junit)

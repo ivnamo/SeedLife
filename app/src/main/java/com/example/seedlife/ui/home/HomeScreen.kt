@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.seedlife.R
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.ui.auth.AuthViewModel
@@ -318,6 +320,21 @@ fun SeedItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Miniatura de imagen
+                val thumbnailUrl = seed.photoUrl
+                    ?: "https://picsum.photos/seed/${seed.id}/150/150"
+                
+                AsyncImage(
+                    model = thumbnailUrl,
+                    contentDescription = "Foto de ${seed.title}",
+                    modifier = Modifier
+                        .size(64.dp)
+                        .padding(end = 12.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.seed_bag),
+                    error = painterResource(id = R.drawable.seed_bag)
+                )
+
                 Column(
                     modifier = Modifier
                         .weight(1f)

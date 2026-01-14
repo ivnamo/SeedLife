@@ -1,5 +1,6 @@
 package com.example.seedlife.data.repository
 
+import android.net.Uri
 import com.example.seedlife.data.model.Seed
 import com.example.seedlife.data.model.Watering
 import com.example.seedlife.data.model.WateringMood
@@ -8,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -19,6 +21,7 @@ import java.util.Date
  */
 class SeedRepository {
     private val firestore = FirebaseFirestore.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     /**
      * Observa los riegos de una seed en tiempo real
@@ -290,6 +293,50 @@ class SeedRepository {
             batch.commit().await()
 
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
+        }
+    }
+
+    /**
+     * Sube una foto de una seed a Firebase Storage y actualiza el photoUrl en Firestore
+     * @param uid ID del usuario
+     * @param seedId ID de la seed
+     * @param uri Uri de la imagen a subir
+     * @return Result con la URL de descarga o error
+     */
+    suspend fun uploadSeedPhoto(
+        uid: String,
+        seedId: String,
+        uri: Uri
+    ): Result<String> {
+        return try {
+            // Crear referencia en Storage: users/{uid}/seeds/{seedId}/cover_{timestamp}.jpg
+            val timestamp = System.currentTimeMillis()
+            val storageRef = storage.reference
+                .child("users")
+                .child(uid)
+                .child("seeds")
+                .child(seedId)
+                .child("cover_$timestamp.jpg")
+
+            // Subir el archivo
+            val uploadTask = storageRef.putFile(uri)
+            uploadTask.await()
+
+            // Obtener la URL de descarga
+            val downloadUrl = storageRef.downloadUrl.await().toString()
+
+            // Actualizar Firestore con el photoUrl
+            val seedRef = firestore
+                .collection("users")
+                .document(uid)
+                .collection("seeds")
+                .document(seedId)
+
+            seedRef.update("photoUrl", downloadUrl).await()
+
+            Result.success(downloadUrl)
         } catch (e: Exception) {
             Result.failure(Exception(FirebaseErrorMapper.mapException(e)))
         }

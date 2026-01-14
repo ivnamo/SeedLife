@@ -1,24 +1,36 @@
 package com.example.seedlife.ui.seeddetail
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.seedlife.R
 import com.example.seedlife.data.model.Watering
 import com.example.seedlife.data.model.WateringMood
 import com.example.seedlife.ui.common.UiState
 import com.example.seedlife.util.ValidationUtils
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,9 +55,34 @@ fun SeedDetailScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
 
+    val context = LocalContext.current
     var showWateringDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Launcher para tomar foto
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && imageUri != null) {
+            viewModel.uploadSeedPhoto(imageUri!!)
+        }
+    }
+
+    // Función helper para generar Uri temporal
+    fun getImageUri(): Uri? {
+        return try {
+            val imageFile = File(context.cacheDir, "seed_${System.currentTimeMillis()}.jpg")
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                imageFile
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     // Mostrar snackbar cuando hay mensaje
     LaunchedEffect(snackbarMessage) {
@@ -113,6 +150,52 @@ fun SeedDetailScreen(
                             Column(
                                 modifier = Modifier.padding(16.dp)
                             ) {
+                                // Imagen de la seed (header)
+                                val imageUrl = currentSeed.photoUrl
+                                    ?: "https://picsum.photos/seed/${currentSeed.id}/600/400"
+                                
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .padding(bottom = 16.dp)
+                                ) {
+                                    AsyncImage(
+                                        model = imageUrl,
+                                        contentDescription = "Foto de ${currentSeed.title}",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop,
+                                        placeholder = painterResource(id = R.drawable.seed_bag),
+                                        error = painterResource(id = R.drawable.seed_bag)
+                                    )
+                                }
+
+                                // Botón para añadir foto
+                                Button(
+                                    onClick = {
+                                        if (isGuest) {
+                                            snackbarHostState.showSnackbar("Solo disponible con cuenta")
+                                        } else {
+                                            val uri = getImageUri()
+                                            if (uri != null) {
+                                                imageUri = uri
+                                                takePictureLauncher.launch(uri)
+                                            }
+                                        }
+                                    },
+                                    enabled = !isLoading && !isGuest,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.PhotoCamera,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text("Añadir foto")
+                                }
+
                                 Text(
                                     text = currentSeed.title,
                                     style = MaterialTheme.typography.headlineMedium,

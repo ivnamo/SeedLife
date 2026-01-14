@@ -1,5 +1,6 @@
 package com.example.seedlife.ui.seeddetail
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.seedlife.data.model.Seed
@@ -195,6 +196,35 @@ class SeedDetailViewModel(
                     }
                 )
             }
+        }
+    }
+
+    /**
+     * Sube una foto de la seed
+     */
+    fun uploadSeedPhoto(uri: Uri) {
+        if (isGuest) {
+            _snackbarMessage.value = "Solo disponible con cuenta"
+            return
+        }
+
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val result = seedRepository.uploadSeedPhoto(uid, seedId, uri)
+            result.fold(
+                onSuccess = {
+                    _isLoading.value = false
+                    _snackbarMessage.value = "Foto subida correctamente"
+                    // El photoUrl se actualizará automáticamente por observeSeed
+                },
+                onFailure = { throwable ->
+                    _isLoading.value = false
+                    _snackbarMessage.value = FirebaseErrorMapper.mapException(
+                        throwable as? Exception ?: Exception(throwable.message, throwable)
+                    )
+                }
+            )
         }
     }
 
