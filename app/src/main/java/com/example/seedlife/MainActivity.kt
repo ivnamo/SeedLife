@@ -11,6 +11,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -19,6 +21,7 @@ import com.example.seedlife.navigation.AppNavGraph
 import com.example.seedlife.navigation.AuthNavGraph
 import com.example.seedlife.ui.auth.AuthState
 import com.example.seedlife.ui.auth.AuthViewModel
+import com.example.seedlife.data.util.MockDataSeeder
 import com.example.seedlife.ui.session.SessionViewModel
 import com.example.seedlife.ui.splash.SplashScreen
 import com.example.seedlife.ui.theme.SeedLifeTheme
@@ -68,6 +71,18 @@ fun SeedLifeApp() {
             }
             else -> {
                 // No hacer nada, mantener el estado actual
+            }
+        }
+    }
+
+    // Ejecutar backfill de datos mock automáticamente (solo una vez por usuario autenticado)
+    var hasSeededData by remember { mutableStateOf(false) }
+    LaunchedEffect(sessionState.uid) {
+        if (sessionState.uid != null && !sessionState.isGuest && !hasSeededData) {
+            hasSeededData = true
+            // Ejecutar en background sin bloquear la UI
+            launch(Dispatchers.IO) {
+                MockDataSeeder.seedMockData(sessionState.uid)
             }
         }
     }
