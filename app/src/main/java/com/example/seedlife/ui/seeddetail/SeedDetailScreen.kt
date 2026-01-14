@@ -1,8 +1,11 @@
 package com.example.seedlife.ui.seeddetail
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -70,6 +73,25 @@ fun SeedDetailScreen(
     ) { success ->
         if (success && imageUri != null) {
             viewModel.uploadSeedPhoto(imageUri!!)
+        }
+    }
+
+    // Launcher para pedir permiso de cámara
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Si se concede el permiso, crear Uri y lanzar cámara
+            val uri = getImageUri()
+            if (uri != null) {
+                imageUri = uri
+                takePictureLauncher.launch(uri)
+            }
+        } else {
+            // Si se deniega, mostrar snackbar
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Se necesita permiso de cámara para tomar fotos")
+            }
         }
     }
 
@@ -181,10 +203,23 @@ fun SeedDetailScreen(
                                                 snackbarHostState.showSnackbar("Solo disponible con cuenta")
                                             }
                                         } else {
-                                            val uri = getImageUri()
-                                            if (uri != null) {
-                                                imageUri = uri
-                                                takePictureLauncher.launch(uri)
+                                            // Verificar si ya tiene permiso
+                                            when (ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.CAMERA
+                                            )) {
+                                                PackageManager.PERMISSION_GRANTED -> {
+                                                    // Ya tiene permiso, crear Uri y lanzar cámara
+                                                    val uri = getImageUri()
+                                                    if (uri != null) {
+                                                        imageUri = uri
+                                                        takePictureLauncher.launch(uri)
+                                                    }
+                                                }
+                                                else -> {
+                                                    // No tiene permiso, pedirlo
+                                                    requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                                }
                                             }
                                         }
                                     },
